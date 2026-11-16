@@ -857,7 +857,7 @@ function renderResponses() {
       ${sup ? `<span class="ctl">تیم <select id="rt"><option value="">همه تیم‌ها</option>${TEAMS.map(t => `<option ${S.respTeam === t ? "selected" : ""}>${t}</option>`).join("")}</select></span>` : ""}
       <span class="spacer"></span>
       <button class="btn ghost sm" id="rr">${IC.refresh} بروزرسانی</button>
-      <button class="btn primary" id="rx" ${rows.length ? "" : "disabled"}>${IC.dl} دانلود Excel</button>
+      <button class="btn ghost sm" id="goPivot">${IC.dl} خروجی Excel در «مدیریت تسک»</button>
     </div></section>
     <div class="summary-row">
       <div class="summary-card"><div class="label">کل ثبت‌ها</div><div class="value">${fa(base.length)}</div></div>
@@ -892,7 +892,7 @@ function renderResponses() {
   m.querySelectorAll("[data-team-card]").forEach(c => c.onclick = () => { S.respTeam = S.respTeam === c.dataset.teamCard ? "" : c.dataset.teamCard; S.respOpt = null; renderResponses(); });
   m.querySelectorAll("[data-o]").forEach(c => c.onclick = () => { S.respOpt = S.respOpt === c.dataset.o ? null : c.dataset.o; renderResponses(); });
   $("#rr").onclick = loadResponses;
-  $("#rx").onclick = () => exportExcel(f, cols, rows, optF, optList);
+  $("#goPivot").onclick = () => go("pivot");
   m.querySelectorAll("[data-dr]").forEach(b => b.onclick = () => confirmBox(`ثبت سفارش ${(S.responses.find(x => x.id === b.dataset.dr)?.data?.order_no) || ""} حذف شود؟`, async () => {
     try { await api("gf_admin_delete_response", {...T(), p_id: b.dataset.dr}); await loadResponses(); toast("حذف شد"); } catch (e) { toast(e.message, 1); } }));
 }
@@ -911,35 +911,6 @@ function teamOverview(f, optF) {
 }
 function loadScript(src) { return new Promise((ok, no) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
 function download(blob, name) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
-async function exportExcel(f, cols, rows, optF, optList) {
-  const head = ["زمان ثبت", "ثبت‌کننده", "داخلی", "تیم", ...cols.map(c => c.label), "تکراری"];
-  const data = rows.map(r => [fmtDT(r.created_at), r.full_name || "", r.username || "", r.team || "", ...cols.map(c => cellVal(r.data[c.id])), r._dup ? `بله (${r._dupN} بار)` : ""]);
-  let sum = null;
-  if (optF) {
-    const per = {};
-    rows.forEach(r => { const k = r.user_id || r.username; const p = per[k] = per[k] || {n: r.full_name || "", u: r.username || "", t: r.team || "", c: {}, s: 0, d: 0};
-      const v = r.data[optF.id]; if (v) p.c[v] = (p.c[v] || 0) + 1; p.s++; if (r._dup) p.d++; });
-    const opts = optList.filter(o => Object.values(per).some(p => p.c[o]));
-    sum = [["ثبت‌کننده", "داخلی", "تیم", ...opts, "جمع", "تکراری"], ...Object.values(per).sort((a, b) => b.s - a.s).map(p => [p.n, p.u, p.t, ...opts.map(o => p.c[o] || 0), p.s, p.d])];
-  }
-  const teamName = isSup() ? (S.respTeam || "همه تیم‌ها") : (S.me.team || "");
-  const a = jStr(S.range.from).replace(/\//g, "-"), b = jStr(S.range.to).replace(/\//g, "-");
-  const name = `${f.title} - ${teamName} - ${a === b ? a : a + " تا " + b}`;
-  const btn = $("#rx"); if (btn) btn.disabled = true;
-  try {
-    if (!window.XLSX) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js");
-    const mk = aoa => { const ws = XLSX.utils.aoa_to_sheet(aoa);
-      ws["!cols"] = aoa[0].map((h, i) => ({wch: Math.min(45, Math.max(String(h).length, ...aoa.slice(1, 300).map(r => String(r[i] ?? "").length)) + 2)})); return ws; };
-    const wb = XLSX.utils.book_new(); wb.Workbook = {Views: [{RTL: true}]};
-    XLSX.utils.book_append_sheet(wb, mk([head, ...data]), "ثبت‌ها");
-    if (sum) XLSX.utils.book_append_sheet(wb, mk(sum), "خلاصه نفرات");
-    XLSX.writeFile(wb, `${name}.xlsx`);
-  } catch (e) {
-    const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
-    download(new Blob(["﻿" + [head, ...data].map(r => r.map(q).join(",")).join("\r\n")], {type: "text/csv;charset=utf-8"}), `${name}.csv`);
-    toast("کتابخانه Excel بارگذاری نشد؛ فایل CSV دانلود شد", 1);
-  } finally { if (btn) btn.disabled = false; }
-}
 
 /* ---------- task management: people × tasks pivot (team lead = own team, supervisor = all) ---------- */
 function rangeControlsHTML(sup) {
@@ -984,9 +955,11 @@ function renderPivot() {
   const arrow = k => P.sk.k === k ? (P.sk.dir < 0 ? " ▼" : " ▲") : "";
   const people = P.list.length, avg = people ? Math.round(10 * P.total / people) / 10 : 0;
   m.innerHTML = `<div class="page-title"><h1>مدیریت تسک${P.team ? " — تیم " + esc(P.team) : sup ? " — همه تیم‌ها" : ""}</h1><span class="sub">${P.f ? esc(P.f.title) : ""} · ${rangeLabel()}</span></div>
-    <section class="panel top"><div class="controls">${rangeControlsHTML(sup)}<span class="spacer"></span>
+    <section class="panel top"><h2><span class="step">${CAL_IC}</span>بازه‌ی زمانی و خروجی Excel</h2>
+      <div class="controls">${rangeControlsHTML(sup)}<span class="spacer"></span>
       <button class="btn ghost sm" id="rr">${IC.refresh} بروزرسانی</button>
-      <button class="btn primary" id="px" ${P.list.length ? "" : "disabled"}>${IC.dl} دانلود Excel</button></div></section>
+      <button class="btn primary" id="px" ${P.list.length ? "" : "disabled"}>${IC.dl} دانلود Excel</button></div>
+      <div class="help" style="margin:10px 0 0">فایل Excel دو برگه دارد: «مدیریت تسک» (همین جدول) و «ثبت‌ها» (همه‌ی ثبت‌های این بازه با شماره سفارش و ستون تکراری).</div></section>
     <div class="summary-row">
       <div class="summary-card"><div class="label">کل تسک‌های ثبت‌شده</div><div class="value">${fa(P.total)}</div></div>
       <div class="summary-card"><div class="label">تعداد کارشناس</div><div class="value">${fa(people)}</div></div>
@@ -1024,13 +997,18 @@ async function exportPivot(P) {
   const foot = ["جمع کل", "", ...(withTeam ? [""] : []), ...P.cols.map(c => P.colTot[c]), P.total, ""];
   const a = jStr(S.range.from).replace(/\//g, "-"), b = jStr(S.range.to).replace(/\//g, "-");
   const name = `مدیریت تسک - ${P.team || "همه تیم‌ها"} - ${a === b ? a : a + " تا " + b}`;
+  const fcols = (P.f?.fields || []).filter(x => x.type !== "section");
+  const rawHead = ["زمان ثبت", "ثبت‌کننده", "داخلی", "تیم", ...fcols.map(c => c.label), "تکراری"];
+  const raw = P.rows.map(r => [fmtDT(r.created_at), r.full_name || "", r.username || "", r.team || "", ...fcols.map(c => cellVal(r.data[c.id])), r._dup ? `بله (${r._dupN} بار)` : ""]);
   const btn = $("#px"); if (btn) btn.disabled = true;
   try {
     if (!window.XLSX) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js");
-    const ws = XLSX.utils.aoa_to_sheet([head, ...body, foot]);
-    ws["!cols"] = head.map((h, i) => ({wch: Math.min(40, Math.max(String(h).length, ...body.slice(0, 300).map(r => String(r[i] ?? "").length)) + 2)}));
+    const mk = aoa => { const ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws["!cols"] = aoa[0].map((h, i) => ({wch: Math.min(45, Math.max(String(h).length, ...aoa.slice(1, 300).map(r => String(r[i] ?? "").length)) + 2)})); return ws; };
     const wb = XLSX.utils.book_new(); wb.Workbook = {Views: [{RTL: true}]};
-    XLSX.utils.book_append_sheet(wb, ws, "مدیریت تسک"); XLSX.writeFile(wb, `${name}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, mk([head, ...body, foot]), "مدیریت تسک");
+    XLSX.utils.book_append_sheet(wb, mk([rawHead, ...raw]), "ثبت‌ها");
+    XLSX.writeFile(wb, `${name}.xlsx`);
   } catch (e) {
     const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
     download(new Blob(["﻿" + [head, ...body, foot].map(r => r.map(q).join(",")).join("\r\n")], {type: "text/csv;charset=utf-8"}), `${name}.csv`);
