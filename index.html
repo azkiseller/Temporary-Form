@@ -333,6 +333,20 @@ tr.dup td:first-child { box-shadow: inset -3px 0 0 var(--danger); }
 .task-list { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .task-row { display: flex; align-items: center; gap: 4px; }
 .task-row .field-in { padding: 7px 10px; font-size: 13px; }
+table.pivot th, table.pivot td { border-inline-start: 1px solid var(--line); }
+table.pivot thead tr.grp-row th { text-align: center; color: var(--accent-strong); font-weight: 800; }
+table.pivot thead tr:nth-child(2) th { top: 41px; }
+table.pivot th.task-h { white-space: normal; min-width: 96px; max-width: 150px; text-align: center; line-height: 1.5; vertical-align: middle; }
+table.pivot th.sortable { cursor: pointer; user-select: none; } table.pivot th.sortable:hover { color: var(--accent-strong); }
+table.pivot td.num { text-align: center; font-variant-numeric: tabular-nums; font-weight: 700; }
+table.pivot td.hit { background: rgba(0,180,255,var(--h)); cursor: pointer; }
+table.pivot td.hit:hover { outline: 2px solid var(--accent); outline-offset: -2px; }
+table.pivot .tot-col { background: var(--accent-soft); color: var(--accent-deep); }
+table.pivot th.tot-col { background: var(--th-bg); color: var(--accent-strong); }
+table.pivot tfoot td { position: sticky; bottom: 0; background: var(--th-bg); border-top: 2px solid var(--accent); font-size: 13.5px; }
+table.pivot tfoot td.tot-col { background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: #fff; }
+table.pivot .name-c { font-weight: 700; }
+.pivot-wrap { max-height: 70vh; }
 .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 10000; padding: 10px 20px; border-radius: 999px; font-size: 13px; font-weight: 700;
   background: var(--pop-bg); color: var(--ink); border: 1px solid var(--line); box-shadow: var(--shadow-float); animation: rise .18s ease;
   -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
@@ -459,8 +473,8 @@ function takePre(k) { const v = S.pre && S.pre[k]; if (S.pre) delete S.pre[k]; r
 /* ---------- shell ---------- */
 function shell(inner, narrow) {
   const r = S.me.role;
-  const tabs = r === "supervisor" ? [["resp", "نظارت همه تیم‌ها"], ["tasks", "تسک‌ها"], ["aforms", "فرم‌ها"], ["users", "کاربران"]]
-             : r === "admin" ? [["resp", "نظارت تیم"], ["tasks", "تسک‌های تیم"], ["tusers", "کاربران تیم"]] : [];
+  const tabs = r === "supervisor" ? [["resp", "نظارت همه تیم‌ها"], ["pivot", "مدیریت تسک"], ["tasks", "تسک‌ها"], ["aforms", "فرم‌ها"], ["users", "کاربران"]]
+             : r === "admin" ? [["resp", "نظارت تیم"], ["pivot", "مدیریت تسک"], ["tasks", "تسک‌های تیم"], ["tusers", "کاربران تیم"]] : [];
   $("#app").innerHTML = `<header class="topbar">
     <div class="topbar-left">
       <div class="app-icon">${IC.app}</div>
@@ -486,11 +500,12 @@ async function go(tab) {
     else if (tab === "tasks") { S.reportForms = await api("gf_report_forms", T()); S.taskEdit = {}; renderTasks(); }
     else if (tab === "tusers") { S.teamUsers = await api("gf_team_users", T()); renderTeamUsers(); }
     else if (tab === "users") { S.users = await api("gf_admin_users", T()); renderUsers(); }
-    else if (tab === "resp") {
+    else if ((tab === "resp" || tab === "pivot") && S.reportForms.length && S.loadedKey === reportKey() && !(S.pre && S.pre.responses)) { renderReport(); }
+    else if (tab === "resp" || tab === "pivot") {
       const pf = takePre("report_forms"), pr = takePre("responses");
       S.reportForms = pf || await api("gf_report_forms", T());
       if (!S.reportForms.some(f => f.id === S.respForm)) S.respForm = S.reportForms[0]?.id || null;
-      if (pf && pr && S.respForm === S.reportForms[0]?.id) { S.responses = pr; markDuplicates(S.responses); renderResponses(); } else await loadResponses(); }
+      if (pf && pr && S.respForm === S.reportForms[0]?.id) { S.responses = pr; S.loadedKey = reportKey(); markDuplicates(S.responses); renderReport(); } else await loadResponses(); }
   } catch (e) { $("#main").innerHTML = `<div class="panel msg err">${esc(e.message)}</div>`; }
 }
 function dialog(html, onMount) {
@@ -796,9 +811,12 @@ async function loadResponses() {
   const btn = $("#rr"); if (btn) btn.disabled = true;
   try {
     S.responses = S.respForm ? await api("gf_admin_responses", {...T(), p_form_id: S.respForm, p_from: jStartISO(S.range.from), p_to: jNextISO(S.range.to)}) : [];
+    S.loadedKey = reportKey();
   } catch (e) { toast(e.message, 1); S.responses = []; }
-  markDuplicates(S.responses); renderResponses();
+  markDuplicates(S.responses); renderReport();
 }
+const reportKey = () => [S.respForm, jStr(S.range.from), jStr(S.range.to)].join("|");
+const renderReport = () => S.tab === "pivot" ? renderPivot() : renderResponses();
 // same order number, same person, same (Tehran) day => duplicate
 function markDuplicates(list) {
   const cnt = {}, key = r => r.data && r.data.order_no ? `${r.user_id}|${String(r.data.order_no).trim()}|${dayKey(r.created_at)}` : null;
@@ -915,6 +933,103 @@ async function exportExcel(f, cols, rows, optF, optList) {
   } catch (e) {
     const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
     download(new Blob(["﻿" + [head, ...data].map(r => r.map(q).join(",")).join("\r\n")], {type: "text/csv;charset=utf-8"}), `${name}.csv`);
+    toast("کتابخانه Excel بارگذاری نشد؛ فایل CSV دانلود شد", 1);
+  } finally { if (btn) btn.disabled = false; }
+}
+
+/* ---------- task management: people × tasks pivot (team lead = own team, supervisor = all) ---------- */
+function rangeControlsHTML(sup) {
+  return `<span class="ctl">از
+      <span class="pickbox"><button type="button" class="pickbtn" id="btn-from">${CAL_IC}<span>${faD(jStr(S.range.from))}</span></button><div class="pop cal" id="cal-from" hidden></div></span></span>
+    <span class="ctl">تا
+      <span class="pickbox"><button type="button" class="pickbtn" id="btn-to">${CAL_IC}<span>${faD(jStr(S.range.to))}</span></button><div class="pop cal" id="cal-to" hidden></div></span></span>
+    <span class="presets">${[["today", "امروز"], ["yest", "دیروز"], ["7", "۷ روز"], ["month", "این ماه"]].map(([k, t]) => `<button data-preset="${k}">${t}</button>`).join("")}</span>
+    ${sup ? `<span class="ctl">تیم <select id="rt"><option value="">همه تیم‌ها</option>${TEAMS.map(t => `<option ${S.respTeam === t ? "selected" : ""}>${t}</option>`).join("")}</select></span>` : ""}`;
+}
+function bindRangeControls(rerender) {
+  ["from", "to"].forEach(w => { $(`#btn-${w}`).onclick = e => { e.stopPropagation(); S.cal.open === w ? closeCal() : openCal(w); }; $(`#cal-${w}`).onclick = e => e.stopPropagation(); });
+  document.querySelectorAll("[data-preset]").forEach(b => b.onclick = () => setPreset(b.dataset.preset));
+  if ($("#rt")) $("#rt").onchange = e => { S.respTeam = e.target.value; S.respOpt = null; rerender(); };
+}
+function pivotData() {
+  const f = S.reportForms.find(x => x.id === S.respForm), sup = isSup();
+  const optF = (f?.fields || []).find(x => HAS_OPTS(x.type) && x.type !== "checkbox");
+  const team = sup ? S.respTeam : S.me.team;
+  const rows = S.responses.filter(r => !team || r.team === team);
+  const per = {}, colTot = {};
+  rows.forEach(r => {
+    const k = r.user_id || r.username;
+    const p = per[k] = per[k] || {id: r.user_id, u: r.username || "", n: r.full_name || "—", t: r.team || "", c: {}, s: 0, d: 0};
+    const v = optF ? (r.data[optF.id] || "—") : "ثبت"; p.c[v] = (p.c[v] || 0) + 1; p.s++; if (r._dup) p.d++;
+    colTot[v] = (colTot[v] || 0) + 1;
+  });
+  // columns: the team's task list (in its order) that have data, plus any other values found
+  const base = optF ? optsFor(optF, team) : [];
+  const cols = [...base.filter(o => colTot[o]), ...Object.keys(colTot).filter(o => !base.includes(o))];
+  let list = Object.values(per);
+  const sk = S.pivotSort || {k: "__total", dir: -1};
+  const val = p => sk.k === "__total" ? p.s : sk.k === "__name" ? p.n : sk.k === "__code" ? p.u : (p.c[sk.k] || 0);
+  list.sort((a, b) => { const x = val(a), y = val(b); return (typeof x === "string" ? x.localeCompare(y, "fa") : x - y) * sk.dir; });
+  return {f, optF, team, rows, cols, list, colTot, total: rows.length, sk};
+}
+function renderPivot() {
+  const m = $("#main"); if (!m) return;
+  const sup = isSup();
+  if (!S.reportForms.length) { m.innerHTML = `<div class="panel empty">هنوز فرمی وجود ندارد.</div>`; return; }
+  const P = pivotData(), maxCell = Math.max(1, ...P.list.flatMap(p => P.cols.map(c => p.c[c] || 0)));
+  const arrow = k => P.sk.k === k ? (P.sk.dir < 0 ? " ▼" : " ▲") : "";
+  const people = P.list.length, avg = people ? Math.round(10 * P.total / people) / 10 : 0;
+  m.innerHTML = `<div class="page-title"><h1>مدیریت تسک${P.team ? " — تیم " + esc(P.team) : sup ? " — همه تیم‌ها" : ""}</h1><span class="sub">${P.f ? esc(P.f.title) : ""} · ${rangeLabel()}</span></div>
+    <section class="panel top"><div class="controls">${rangeControlsHTML(sup)}<span class="spacer"></span>
+      <button class="btn ghost sm" id="rr">${IC.refresh} بروزرسانی</button>
+      <button class="btn primary" id="px" ${P.list.length ? "" : "disabled"}>${IC.dl} دانلود Excel</button></div></section>
+    <div class="summary-row">
+      <div class="summary-card"><div class="label">کل تسک‌های ثبت‌شده</div><div class="value">${fa(P.total)}</div></div>
+      <div class="summary-card"><div class="label">تعداد کارشناس</div><div class="value">${fa(people)}</div></div>
+      <div class="summary-card"><div class="label">میانگین هر نفر</div><div class="value">${fa(avg)}</div></div>
+      <div class="summary-card"><div class="label">پرتکرارترین تسک</div><div class="value sm">${esc(P.cols.slice().sort((a, b) => P.colTot[b] - P.colTot[a])[0] || "—")}</div></div>
+    </div>
+    <section class="panel"><div class="tbar"><h2><span class="step">۱</span>تعداد تسک به تفکیک کارشناس</h2><span class="spacer"></span>
+      <span style="color:var(--ink-faint);font-size:12px">روی عنوان ستون برای مرتب‌سازی و روی هر عدد برای دیدن ثبت‌ها کلیک کنید</span></div>
+    ${!P.list.length ? `<div class="empty">در این بازه تسکی ثبت نشده است</div>` : `
+    <div class="tablewrap pivot-wrap"><table class="pivot"><thead>
+      <tr class="grp-row"><th colspan="${sup && !P.team ? 3 : 2}" class="corner">تعداد</th><th colspan="${P.cols.length}" class="grp">عنوان تسک</th><th class="tot-col"></th></tr>
+      <tr><th data-sort="__code" class="sortable">کد داخلی${arrow("__code")}</th><th data-sort="__name" class="sortable">نام کارشناس${arrow("__name")}</th>${sup && !P.team ? "<th>تیم</th>" : ""}
+        ${P.cols.map(c => `<th data-sort="${esc(c)}" class="sortable task-h">${esc(c)}${arrow(c)}</th>`).join("")}
+        <th data-sort="__total" class="sortable tot-col">جمع کل${arrow("__total")}</th></tr></thead><tbody>
+      ${P.list.map(p => `<tr${p.d ? ' class="has-dup"' : ""}><td class="code" style="text-align:right">${esc(p.u)}</td><td class="nowrap name-c">${esc(p.n)}${p.d ? ` <span class="tag bad" title="ثبت تکراری">${fa(p.d)} تکراری</span>` : ""}</td>${sup && !P.team ? `<td class="nowrap">${esc(p.t)}</td>` : ""}
+        ${P.cols.map(c => { const v = p.c[c] || 0; return `<td class="num${v ? " hit" : ""}" ${v ? `data-u="${esc(p.u)}" data-t="${esc(c)}" style="--h:${(0.08 + 0.42 * v / maxCell).toFixed(2)}"` : ""}>${v ? fa(v) : ""}</td>`; }).join("")}
+        <td class="num tot-col"><b>${fa(p.s)}</b></td></tr>`).join("")}
+      </tbody><tfoot><tr><td colspan="${sup && !P.team ? 3 : 2}"><b>جمع کل</b></td>${P.cols.map(c => `<td class="num"><b>${fa(P.colTot[c])}</b></td>`).join("")}<td class="num tot-col"><b>${fa(P.total)}</b></td></tr></tfoot>
+    </table></div>`}</section>`;
+  bindRangeControls(renderPivot);
+  $("#rr").onclick = loadResponses;
+  $("#px").onclick = () => exportPivot(P);
+  m.querySelectorAll("[data-sort]").forEach(th => th.onclick = () => {
+    const k = th.dataset.sort, cur = S.pivotSort || {k: "__total", dir: -1};
+    S.pivotSort = {k, dir: cur.k === k ? -cur.dir : (k === "__name" || k === "__code" ? 1 : -1)}; renderPivot(); });
+  m.querySelectorAll("td.hit").forEach(td => td.onclick = () => {
+    S.respOpt = P.optF ? td.dataset.t : null; S.respFilter = td.dataset.u; S.dupOnly = false;
+    S.tab = "resp"; shell("", false); renderResponses(); window.scrollTo({top: 0});
+  });
+}
+async function exportPivot(P) {
+  const sup = isSup(), withTeam = sup && !P.team;
+  const head = ["کد داخلی", "نام کارشناس", ...(withTeam ? ["تیم"] : []), ...P.cols, "جمع کل", "تکراری"];
+  const body = P.list.map(p => [p.u, p.n, ...(withTeam ? [p.t] : []), ...P.cols.map(c => p.c[c] || ""), p.s, p.d || ""]);
+  const foot = ["جمع کل", "", ...(withTeam ? [""] : []), ...P.cols.map(c => P.colTot[c]), P.total, ""];
+  const a = jStr(S.range.from).replace(/\//g, "-"), b = jStr(S.range.to).replace(/\//g, "-");
+  const name = `مدیریت تسک - ${P.team || "همه تیم‌ها"} - ${a === b ? a : a + " تا " + b}`;
+  const btn = $("#px"); if (btn) btn.disabled = true;
+  try {
+    if (!window.XLSX) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js");
+    const ws = XLSX.utils.aoa_to_sheet([head, ...body, foot]);
+    ws["!cols"] = head.map((h, i) => ({wch: Math.min(40, Math.max(String(h).length, ...body.slice(0, 300).map(r => String(r[i] ?? "").length)) + 2)}));
+    const wb = XLSX.utils.book_new(); wb.Workbook = {Views: [{RTL: true}]};
+    XLSX.utils.book_append_sheet(wb, ws, "مدیریت تسک"); XLSX.writeFile(wb, `${name}.xlsx`);
+  } catch (e) {
+    const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    download(new Blob(["﻿" + [head, ...body, foot].map(r => r.map(q).join(",")).join("\r\n")], {type: "text/csv;charset=utf-8"}), `${name}.csv`);
     toast("کتابخانه Excel بارگذاری نشد؛ فایل CSV دانلود شد", 1);
   } finally { if (btn) btn.disabled = false; }
 }
