@@ -8,7 +8,6 @@
 <link rel="apple-touch-icon" href="favicon.png">
 <link rel="preload" href="fonts/IRANSansX-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/IRANSansX-700.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="fonts/IRANSansX-900.woff2" as="font" type="font/woff2" crossorigin>
 <script>
 (function () {
   try {
@@ -81,7 +80,6 @@ button, input, select, textarea { font-family: var(--font); }
     radial-gradient(700px 560px at 88% 102%, rgba(0,140,230,.24), transparent 62%),
     radial-gradient(640px 520px at 4% 104%, rgba(22,86,245,.20), transparent 62%),
     linear-gradient(160deg, #CDE8FF 0%, #EAF4FE 45%, #FFFFFF 100%);
-  animation: glow-shift 24s ease-in-out infinite;
 }
 html[data-theme="dark"] .bg-glow {
   background:
@@ -449,9 +447,13 @@ async function logout(expired) {
 }
 async function boot() {
   if (!S.token) { S.token = store.get("gf_token"); if (!S.token) return renderLogin(); }
-  try { S.me = await api("gf_me", T()); } catch (e) { return renderLogin(e.message); }
+  try { S.pre = await fetchBoot(); S.me = S.pre.me; } catch (e) { return renderLogin(e.message); }
   if (!S.tab) S.tab = homeTab(S.me.role);
   go(S.tab);
+}
+// me + first screen's data in a single request
+function fetchBoot() { return api("gf_boot", {...T(), p_from: jStartISO(S.range.from), p_to: jNextISO(S.range.to)}); }
+function takePre(k) { const v = S.pre && S.pre[k]; if (S.pre) delete S.pre[k]; return v;
 }
 
 /* ---------- shell ---------- */
@@ -479,13 +481,16 @@ async function go(tab) {
   shell(`<div class="panel empty">در حال بارگذاری …</div>`, tab === "fill");
   try {
     if (tab === "fill" && S.me.role !== "user") { return go("resp"); }
-    if (tab === "fill") { S.forms = await api("gf_my_forms", T()); if (S.forms.length === 1) await openFill(S.forms[0]); else renderMyForms(); }
+    if (tab === "fill") { S.forms = takePre("forms") || await api("gf_my_forms", T()); if (S.forms.length === 1) await openFill(S.forms[0]); else renderMyForms(); }
     else if (tab === "aforms") { [S.adminForms, S.users] = await Promise.all([api("gf_admin_forms", T()), api("gf_admin_users", T())]); renderAdminForms(); }
     else if (tab === "tasks") { S.reportForms = await api("gf_report_forms", T()); S.taskEdit = {}; renderTasks(); }
     else if (tab === "tusers") { S.teamUsers = await api("gf_team_users", T()); renderTeamUsers(); }
     else if (tab === "users") { S.users = await api("gf_admin_users", T()); renderUsers(); }
-    else if (tab === "resp") { S.reportForms = await api("gf_report_forms", T());
-      if (!S.reportForms.some(f => f.id === S.respForm)) S.respForm = S.reportForms[0]?.id || null; await loadResponses(); }
+    else if (tab === "resp") {
+      const pf = takePre("report_forms"), pr = takePre("responses");
+      S.reportForms = pf || await api("gf_report_forms", T());
+      if (!S.reportForms.some(f => f.id === S.respForm)) S.respForm = S.reportForms[0]?.id || null;
+      if (pf && pr && S.respForm === S.reportForms[0]?.id) { S.responses = pr; markDuplicates(S.responses); renderResponses(); } else await loadResponses(); }
   } catch (e) { $("#main").innerHTML = `<div class="panel msg err">${esc(e.message)}</div>`; }
 }
 function dialog(html, onMount) {
@@ -537,7 +542,8 @@ function fieldBody(f) {
 }
 async function openFill(f, okMsg = "") {
   S.fill = f;
-  try { S.recent = await api("gf_my_responses", {...T(), p_form_id: f.id}); } catch (e) { S.recent = []; }
+  const pre = takePre("recent");
+  try { S.recent = pre || await api("gf_my_responses", {...T(), p_form_id: f.id}); } catch (e) { S.recent = []; }
   renderFill(okMsg);
 }
 function renderFill(okMsg = "") {
@@ -598,7 +604,8 @@ function renderFill(okMsg = "") {
     $("#sb").disabled = true; $("#fm").className = "msg"; $("#fm").textContent = "در حال ثبت …";
     try {
       await api("gf_submit", {...T(), p_form_id: f.id, p_data: data});
-      S.forms = await api("gf_my_forms", T()); S.fill = S.forms.find(x => x.id === f.id) || f;
+      try { S.pre = await fetchBoot(); S.forms = takePre("forms") || S.forms; } catch (e) {}
+      S.fill = S.forms.find(x => x.id === f.id) || f; if (S.forms.length !== 1 && S.pre) delete S.pre.recent;
       // keep choice answers (same task is usually repeated), clear typed answers
       for (const x of f.fields) if (!HAS_OPTS(x.type)) delete S.vals[x.id];
       const ord = data.order_no ? ` — سفارش ${data.order_no}` : "";
