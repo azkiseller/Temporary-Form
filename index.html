@@ -4,8 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ثبت تسک‌ها</title>
-<link rel="icon" type="image/png" href="/assets/favicon.png">
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="favicon.png">
+<link rel="preload" href="fonts/IRANSansX-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/IRANSansX-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/IRANSansX-900.woff2" as="font" type="font/woff2" crossorigin>
 <script>
 (function () {
   try {
@@ -16,10 +19,10 @@
 })();
 </script>
 <style>
-@font-face { font-family: 'IRANSansX'; font-weight: 400; font-display: swap; src: url('/assets/fonts/IRANSansX-400.woff2') format('woff2'); }
-@font-face { font-family: 'IRANSansX'; font-weight: 600; font-display: swap; src: url('/assets/fonts/IRANSansX-600.woff2') format('woff2'); }
-@font-face { font-family: 'IRANSansX'; font-weight: 700; font-display: swap; src: url('/assets/fonts/IRANSansX-700.woff2') format('woff2'); }
-@font-face { font-family: 'IRANSansX'; font-weight: 900; font-display: swap; src: url('/assets/fonts/IRANSansX-900.woff2') format('woff2'); }
+@font-face { font-family: 'IRANSansX'; font-weight: 400; font-display: swap; src: url('fonts/IRANSansX-400.woff2') format('woff2'); }
+@font-face { font-family: 'IRANSansX'; font-weight: 600; font-display: swap; src: url('fonts/IRANSansX-600.woff2') format('woff2'); }
+@font-face { font-family: 'IRANSansX'; font-weight: 700; font-display: swap; src: url('fonts/IRANSansX-700.woff2') format('woff2'); }
+@font-face { font-family: 'IRANSansX'; font-weight: 900; font-display: swap; src: url('fonts/IRANSansX-900.woff2') format('woff2'); }
 
 :root {
   --surface: rgba(255,255,255,.72);
@@ -39,7 +42,7 @@
   --radius-lg: 20px; --radius: 14px; --radius-sm: 9px; --glass-blur: 18px;
   --shadow-card: 0 8px 28px rgba(15,72,150,.14), inset 0 1px 0 rgba(255,255,255,.6);
   --shadow-float: 0 24px 55px -14px rgba(15,72,150,.22), inset 0 1px 0 rgba(255,255,255,.7);
-  --font: 'IRANSansX', 'Vazirmatn', Tahoma, sans-serif;
+  --font: 'IRANSansX', Tahoma, sans-serif;
   --topbar-bg: rgba(255,255,255,.4);
   --pop-bg: rgba(255,255,255,.94);
   --pop-solid: #F7FBFF;
@@ -458,7 +461,6 @@ function shell(inner, narrow) {
              : r === "admin" ? [["resp", "نظارت تیم"], ["tasks", "تسک‌های تیم"], ["tusers", "کاربران تیم"]] : [];
   $("#app").innerHTML = `<header class="topbar">
     <div class="topbar-left">
-      <div class="topbar-brand"><img src="/assets/azkiseller.png" alt="azkiseller" onerror="this.parentNode.remove()"></div>
       <div class="app-icon">${IC.app}</div>
       <div><div class="app-title">${r === "user" ? "ثبت تسک‌ها" : "نظارت بر تسک‌ها"}</div><div class="app-sub">${S.me.team ? "تیم " + esc(S.me.team) : "همه تیم‌ها"} · ${ROLES[r]}</div></div>
     </div>
