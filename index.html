@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ثبت تسک‌ها</title>
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script>
+(function () {
+  try {
+    var mode = localStorage.getItem('vcThemeMode') || 'system';
+    var dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+})();
+</script>
+<style>
+@font-face { font-family: 'IRANSansX'; font-weight: 400; font-display: swap; src: url('/assets/fonts/IRANSansX-400.woff2') format('woff2'); }
+@font-face { font-family: 'IRANSansX'; font-weight: 600; font-display: swap; src: url('/assets/fonts/IRANSansX-600.woff2') format('woff2'); }
+@font-face { font-family: 'IRANSansX'; font-weight: 700; font-display: swap; src: url('/assets/fonts/IRANSansX-700.woff2') format('woff2'); }
+@font-face { font-family: 'IRANSansX'; font-weight: 900; font-display: swap; src: url('/assets/fonts/IRANSansX-900.woff2') format('woff2'); }
+
+:root {
+  --surface: rgba(255,255,255,.72);
+  --surface-tint: rgba(217,236,255,.55);
+  --ink: #0F1B33;
+  --ink-soft: rgba(15,27,51,.68);
+  --ink-faint: rgba(15,27,51,.46);
+  --line: rgba(23,169,255,.32);
+  --accent: #00B4FF;
+  --accent-deep: #1656F5;
+  --accent-soft: rgba(0,180,255,.20);
+  --accent-strong: #0D8FCB;
+  --danger: #E0453F; --danger-soft: rgba(224,69,63,.14);
+  --good: #1FA971;   --good-soft: rgba(31,169,113,.14);
+  --warn: #C9780C;   --warn-soft: rgba(224,138,23,.16);
+  --gray: #5B6474;   --gray-soft: rgba(91,100,116,.13);
+  --radius-lg: 20px; --radius: 14px; --radius-sm: 9px; --glass-blur: 18px;
+  --shadow-card: 0 8px 28px rgba(15,72,150,.14), inset 0 1px 0 rgba(255,255,255,.6);
+  --shadow-float: 0 24px 55px -14px rgba(15,72,150,.22), inset 0 1px 0 rgba(255,255,255,.7);
+  --font: 'IRANSansX', 'Vazirmatn', Tahoma, sans-serif;
+  --topbar-bg: rgba(255,255,255,.4);
+  --pop-bg: rgba(255,255,255,.94);
+  --th-bg: rgba(225,240,255,.92);
+}
+html[data-theme="dark"] {
+  --surface: rgba(255,255,255,.07);
+  --surface-tint: rgba(255,255,255,.04);
+  --ink: #EAF0FB; --ink-soft: rgba(234,240,251,.68); --ink-faint: rgba(234,240,251,.44);
+  --line: rgba(255,255,255,.14);
+  --accent-deep: #4C8DFF; --accent-soft: rgba(0,180,255,.22); --accent-strong: #29C2FF;
+  --danger: #FF6B64; --danger-soft: rgba(255,107,100,.18);
+  --good: #34C98C;   --good-soft: rgba(52,201,140,.18);
+  --warn: #F2A93B;   --warn-soft: rgba(242,169,59,.18);
+  --gray: #A3AEC2;   --gray-soft: rgba(163,174,194,.15);
+  --shadow-card: 0 8px 32px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08);
+  --shadow-float: 0 24px 60px -16px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.1);
+  --topbar-bg: rgba(10,15,28,.22);
+  --pop-bg: rgba(18,25,45,.96);
+  --th-bg: rgba(22,32,58,.96);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font); background: #0c1226; color: var(--ink); min-height: 100vh; font-size: 14px; line-height: 1.75; }
+::selection { background: var(--accent-soft); }
+[hidden] { display: none !important; }
+html.theme-switching *, html.theme-switching *::before, html.theme-switching *::after { transition: none !important; }
+button, input, select, textarea { font-family: var(--font); }
+
+.bg-glow {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(620px 520px at 12% -8%, rgba(0,180,255,.50), transparent 62%),
+    radial-gradient(680px 540px at 106% 6%, rgba(22,86,245,.32), transparent 62%),
+    radial-gradient(700px 560px at 88% 102%, rgba(0,140,230,.24), transparent 62%),
+    radial-gradient(640px 520px at 4% 104%, rgba(22,86,245,.20), transparent 62%),
+    linear-gradient(160deg, #CDE8FF 0%, #EAF4FE 45%, #FFFFFF 100%);
+  animation: glow-shift 24s ease-in-out infinite;
+}
+html[data-theme="dark"] .bg-glow {
+  background:
+    radial-gradient(620px 520px at 12% -8%, rgba(0,180,255,.30), transparent 60%),
+    radial-gradient(680px 540px at 106% 6%, rgba(76,141,255,.26), transparent 60%),
+    radial-gradient(700px 560px at 88% 102%, rgba(22,86,245,.24), transparent 60%),
+    radial-gradient(640px 520px at 4% 104%, rgba(0,120,220,.18), transparent 60%),
+    linear-gradient(135deg, #05070f 0%, #060a16 55%, #04070d 100%);
+}
+@keyframes glow-shift { 0%,100% { filter: saturate(1); } 50% { filter: saturate(1.15); } }
+@media (prefers-reduced-motion: reduce) { .bg-glow { animation: none; } }
+
+.theme-toggle {
+  position: fixed; bottom: 16px; left: 16px; z-index: 9999; display: flex; gap: 2px; padding: 4px; border-radius: 999px;
+  background: var(--surface); -webkit-backdrop-filter: blur(14px) saturate(180%); backdrop-filter: blur(14px) saturate(180%);
+  border: 1px solid var(--line); box-shadow: var(--shadow-card);
+}
+.theme-toggle button { width: 34px; height: 34px; border-radius: 50%; border: 0; background: transparent; color: var(--ink-soft);
+  display: grid; place-items: center; cursor: pointer; transition: background .15s, color .15s; }
+.theme-toggle button:hover { color: var(--ink); }
+.theme-toggle button.on { background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: #fff; }
+.theme-toggle svg { width: 18px; height: 18px; }
+
+/* ---------- top bar ---------- */
+#app { position: relative; z-index: 1; min-height: 100vh; }
+header.topbar {
+  position: sticky; top: 0; z-index: 30;
+  background: var(--topbar-bg); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--line); padding: 12px 28px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+@media (max-width: 560px) { header.topbar { padding: 10px 16px; } }
+.topbar-left, .topbar-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.topbar-right { gap: 8px; }
+.topbar-brand { display: flex; align-items: center; padding-inline-end: 14px; margin-inline-end: 2px; border-inline-end: 1px solid var(--line); }
+.topbar-brand img { height: 24px; width: auto; display: block; }
+html[data-theme="dark"] .topbar-brand img { filter: drop-shadow(0 0 6px rgba(0,180,255,.25)); }
+.app-icon { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: #fff;
+  display: grid; place-items: center; box-shadow: 0 6px 16px -6px rgba(22,86,245,.5); flex-shrink: 0; }
+.app-title { font-weight: 800; font-size: 15px; line-height: 1.4; }
+.app-sub { font-size: 11.5px; color: var(--ink-faint); opacity: .85; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer;
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.pill:hover { border-color: var(--accent); }
+.pill.static { cursor: default; } .pill.static:hover { border-color: var(--line); }
+.pill .role { color: var(--accent-strong); font-weight: 700; }
+.dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 8px currentColor; background: var(--good); color: var(--good); }
+.seg { display: flex; gap: 2px; padding: 4px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.seg button { border: 0; background: transparent; color: var(--ink-soft); padding: 5px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: .15s; }
+.seg button:hover { color: var(--ink); }
+.seg button.on { background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: #fff; box-shadow: 0 6px 14px -6px rgba(22,86,245,.55); }
+
+main { max-width: 1180px; margin: 0 auto; padding: 26px 22px 70px; }
+main.narrow { max-width: 820px; }
+@media (max-width: 560px) { main { padding: 18px 14px 70px; } }
+
+/* ---------- panels ---------- */
+.panel {
+  position: relative; background: var(--surface);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%); backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+  padding: 20px 22px; margin-bottom: 18px;
+}
+.panel.top { z-index: 20; }
+.panel h2 { font-size: 15px; margin: 0 0 14px; font-weight: 800; display: flex; align-items: center; gap: 10px; letter-spacing: -.2px; }
+.panel .help { color: var(--ink-soft); font-size: 12.5px; margin: -8px 0 12px; white-space: pre-line; }
+.step { width: 26px; height: 26px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 12.5px; font-weight: 900; color: #fff; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), var(--accent-deep)); box-shadow: 0 4px 12px -4px rgba(22,86,245,.55); }
+.req { color: var(--danger); font-weight: 900; }
+.page-title { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; flex-wrap: wrap; }
+.page-title h1 { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: -.3px; }
+.page-title .sub { color: var(--ink-soft); font-size: 12.5px; }
+
+.field-in, textarea, select, input[type=password], input[type=text] {
+  width: 100%; background: var(--surface-tint); border: 1.5px solid var(--line); border-radius: var(--radius-sm); color: var(--ink);
+  -webkit-backdrop-filter: blur(12px) saturate(160%); backdrop-filter: blur(12px) saturate(160%);
+  box-shadow: inset 0 1px 4px rgba(15,72,150,.10); transition: border-color .15s, box-shadow .15s, background .15s;
+  padding: 10px 14px; font-size: 14px;
+}
+.field-in.big { font-size: 18px; font-weight: 700; padding: 12px 16px; letter-spacing: .5px; }
+textarea { min-height: 100px; resize: vertical; line-height: 1.8; }
+.field-in::placeholder, textarea::placeholder { color: var(--ink-faint); }
+textarea:focus, .field-in:focus, select:focus, input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+select { width: auto; padding: 7px 10px; font-size: 13px; box-shadow: none; }
+select option { color: #0F1B33; background: #fff; }
+html[data-theme="dark"] select option { color: #EAF0FB; background: #161d31; }
+input[type=checkbox], input[type=radio] { accent-color: var(--accent); width: 16px; height: 16px; }
+.ltr { direction: ltr; text-align: left; }
+.err-field .field-in, .err-field textarea, .err-field .opt-grid { border-color: var(--danger) !important; box-shadow: 0 0 0 4px var(--danger-soft); border-radius: var(--radius-sm); }
+.err-text { color: var(--danger); font-size: 12.5px; font-weight: 700; margin-top: 8px; }
+
+.controls { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; }
+.ctl { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-soft); font-size: 12.5px; font-weight: 700; }
+.count-badge { display: inline-flex; align-items: baseline; gap: 5px; padding: 6px 14px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-strong); font-weight: 700; font-size: 12.5px; }
+.count-badge b { font-size: 16px; font-weight: 900; }
+.spacer { flex: 1; }
+
+.btn { border: 1px solid transparent; border-radius: var(--radius-sm); padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px; transition: transform .15s, filter .15s, box-shadow .15s; color: var(--ink); white-space: nowrap; }
+.btn.primary { border-color: rgba(255,255,255,.45); background: linear-gradient(135deg, rgba(23,169,255,.92) 0%, rgba(22,86,245,.92) 100%); color: #fff;
+  box-shadow: 0 10px 24px -10px rgba(22,86,245,.55), inset 0 1px 0 rgba(255,255,255,.5); }
+.btn.primary:hover:not(:disabled) { filter: brightness(1.06); transform: translateY(-1px); }
+.btn.ghost { background: var(--surface); border-color: var(--line); }
+.btn.ghost:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-strong); }
+.btn.danger { background: var(--danger-soft); color: var(--danger); border-color: rgba(224,69,63,.3); }
+.btn.sm { padding: 6px 12px; font-size: 12.5px; }
+.btn.wide { min-width: 160px; justify-content: center; }
+.btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; transform: none; }
+.icon-btn { border: 1px solid transparent; background: transparent; color: var(--ink-soft); width: 30px; height: 30px; border-radius: 9px; cursor: pointer;
+  display: inline-grid; place-items: center; transition: .12s; }
+.icon-btn:hover { border-color: var(--line); background: var(--surface-tint); color: var(--accent-strong); }
+.icon-btn.del:hover { color: var(--danger); background: var(--danger-soft); }
+.icon-btn svg { width: 16px; height: 16px; }
+
+/* option chips (task picker) */
+.opt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.opt { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); background: var(--surface-tint); border-radius: 11px; padding: 10px 12px;
+  cursor: pointer; color: var(--ink); font-size: 13px; font-weight: 700; text-align: right; transition: .12s; line-height: 1.6; font-family: var(--font); }
+.opt:hover { border-color: var(--accent); transform: translateY(-1px); }
+.opt .ck { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--line); flex-shrink: 0; display: grid; place-items: center; color: #fff; }
+.opt.multi .ck { border-radius: 6px; }
+.opt.sel { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent-soft); }
+.opt.sel .ck { background: linear-gradient(135deg, var(--accent), var(--accent-deep)); border-color: transparent; }
+.opt .ck svg { width: 12px; height: 12px; opacity: 0; } .opt.sel .ck svg { opacity: 1; }
+
+/* summary cards */
+.summary-row { display: grid; gap: 14px; grid-template-columns: repeat(4, 1fr); margin-bottom: 18px; }
+@media (max-width: 760px) { .summary-row { grid-template-columns: repeat(2, 1fr); } }
+.summary-card {
+  background: linear-gradient(135deg, rgba(22,86,245,.62) 0%, rgba(23,169,255,.62) 100%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%); backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid rgba(255,255,255,.4); border-radius: var(--radius-lg); padding: 14px 16px; min-height: 92px;
+  display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center;
+  box-shadow: 0 16px 34px -16px rgba(22,86,245,.5), inset 0 1px 0 rgba(255,255,255,.45); position: relative; overflow: hidden;
+}
+.summary-card::after { content: ""; position: absolute; inset: 0; background: radial-gradient(140px 140px at 90% 0%, rgba(255,255,255,.25), transparent 70%); }
+.summary-card .label { font-size: 12px; color: rgba(255,255,255,.9); font-weight: 600; position: relative; }
+.summary-card .value { font-size: 22px; font-weight: 900; color: #fff; position: relative; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.summary-card .value.sm { font-size: 15px; }
+.msg { margin-top: 8px; font-size: 13px; color: var(--ink-soft); min-height: 20px; font-weight: 600; }
+.msg.err { color: var(--danger); } .msg.ok { color: var(--good); }
+
+/* task chips (report filter) */
+.chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.chip { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; cursor: pointer; transition: .15s; text-align: right;
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: var(--shadow-card); position: relative; overflow: hidden; }
+.chip:hover { transform: translateY(-2px); border-color: var(--accent); }
+.chip.sel { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow-card); }
+.chip .n { font-size: 24px; font-weight: 900; line-height: 1.3; color: var(--accent-deep); font-variant-numeric: tabular-nums; }
+.chip .t { font-size: 11.5px; color: var(--ink-soft); font-weight: 600; line-height: 1.5; }
+.chip.zero .n { color: var(--ink-faint); }
+
+/* tables */
+.tbar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.tbar h2 { margin: 0; }
+.search { flex: 1; min-width: 180px; padding: 9px 14px; font-size: 13.5px; }
+.tablewrap { overflow: auto; border: 1px solid var(--line); border-radius: var(--radius); max-height: 620px; background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { position: sticky; top: 0; background: var(--th-bg); color: var(--ink-soft); font-weight: 700; font-size: 12px; text-align: right; padding: 10px 12px;
+  border-bottom: 1px solid var(--line); white-space: nowrap; z-index: 1; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tbody tr { transition: background .12s; }
+tbody tr:hover td { background: var(--surface-tint); }
+.code { font-family: ui-monospace, Consolas, monospace; direction: ltr; text-align: left; font-size: 12.5px; white-space: nowrap; letter-spacing: .3px; }
+.nowrap { white-space: nowrap; }
+.tag { display: inline-block; padding: 3px 11px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+.tag.ok { background: var(--good-soft); color: var(--good); } .tag.bad { background: var(--danger-soft); color: var(--danger); }
+.tag.doc { background: var(--accent-soft); color: var(--accent-deep); } .tag.err { background: var(--gray-soft); color: var(--gray); } .tag.warn { background: var(--warn-soft); color: var(--warn); }
+.empty { padding: 44px 18px; text-align: center; color: var(--ink-faint); font-size: 13px; }
+.more { padding: 10px; text-align: center; color: var(--ink-faint); font-size: 12.5px; }
+.bar-cell { display: flex; align-items: center; gap: 8px; min-width: 140px; }
+.bar-cell span { height: 8px; border-radius: 999px; background: linear-gradient(90deg, var(--accent-deep), var(--accent)); }
+
+/* dialogs */
+dialog { border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 24px; width: min(520px, 92vw); box-shadow: var(--shadow-float); color: var(--ink);
+  background: var(--pop-bg); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+dialog::backdrop { background: rgba(8,14,30,.45); backdrop-filter: blur(3px); }
+dialog h3 { margin: 0 0 14px; font-weight: 800; }
+dialog label.l { display: block; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); margin: 12px 0 6px; }
+dialog .controls { margin-top: 18px; flex-direction: row-reverse; justify-content: flex-start; }
+dialog pre { background: var(--surface-tint); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px; user-select: all; margin: 0; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.grid2 select { width: 100%; padding: 10px 12px; }
+
+/* login */
+.login { max-width: 400px; margin: 11vh auto 0; padding: 0 16px; }
+.login .panel { padding: 28px; }
+.login .head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.login label.l { display: block; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); margin: 14px 0 6px; }
+
+/* editor */
+.fed { border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; background: var(--surface-tint); }
+.fed .row1 { display: grid; grid-template-columns: 1fr 210px; gap: 10px; }
+@media (max-width: 600px) { .fed .row1 { grid-template-columns: 1fr; } }
+.fed .row1 select { width: 100%; padding: 10px 12px; }
+.fed .tools { display: flex; align-items: center; gap: 4px; margin-top: 10px; flex-wrap: wrap; }
+.fed .tools label { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); margin-inline-end: 12px; cursor: pointer; }
+.team-opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+@media (max-width: 760px) { .team-opts { grid-template-columns: 1fr; } }
+.team-opts .tl { font-size: 12px; font-weight: 800; color: var(--accent-strong); margin-bottom: 4px; }
+.ulist { max-height: 240px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 6px 12px; background: var(--surface-tint); margin-top: 8px; }
+.ulist label { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13px; cursor: pointer; }
+.radio-line { display: flex; gap: 18px; flex-wrap: wrap; }
+.radio-line label { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 10000; padding: 10px 20px; border-radius: 999px; font-size: 13px; font-weight: 700;
+  background: var(--pop-bg); color: var(--ink); border: 1px solid var(--line); box-shadow: var(--shadow-float); animation: rise .18s ease;
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+.toast.err { color: var(--danger); border-color: rgba(224,69,63,.4); }
+@keyframes rise { from { opacity: 0; transform: translate(-50%, 6px); } to { opacity: 1; transform: translate(-50%, 0); } }
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="theme-toggle" id="themeSeg" role="group" aria-label="پوسته">
+  <button data-m="light" title="روز"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></button>
+  <button data-m="dark" title="شب"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+  <button data-m="system" title="سیستم"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>
+</div>
+
+<div id="app"></div>
+
+<script>
+// ====== تنظیمات Supabase ======
+const SUPABASE_URL = "https://akaczqhvyemkjnwzgjzr.supabase.co";
+const SUPABASE_KEY = "sb_publishable_uup5CXqDLkXph4jdC1Qb_A_9PW3n9oG";
+// ==============================
+
+const TEAMS = ["بدنه", "الحاقیه", "غیر خودرویی"];
+const ROLES = {supervisor: "سوپروایزر", admin: "ادمین", user: "کاربر"};
+const TYPES = {text: "متن کوتاه", textarea: "متن بلند", number: "عدد", select: "انتخاب یک گزینه", checkbox: "انتخاب چند گزینه", jdate: "تاریخ شمسی", time: "ساعت", section: "عنوان بخش / توضیح"};
+const HAS_OPTS = t => ["select", "radio", "checkbox"].includes(t);
+const ERR = {INVALID_LOGIN: "داخلی یا رمز عبور اشتباه است", NOT_AUTHENTICATED: "نشست شما منقضی شده؛ دوباره وارد شوید", FORBIDDEN: "دسترسی ندارید",
+  FORM_NOT_AVAILABLE: "این فرم در دسترس نیست", ALREADY_SUBMITTED: "این فرم را قبلاً ثبت کرده‌اید", WRONG_PASSWORD: "رمز فعلی اشتباه است",
+  WEAK_PASSWORD: "رمز باید حداقل ۶ کاراکتر باشد", BAD_USERNAME: "نام کاربری فقط عدد، حروف انگلیسی و . _ - @ (حداقل ۳ کاراکتر)", USERNAME_TAKEN: "این نام کاربری قبلاً ثبت شده",
+  CANNOT_DEMOTE_SELF: "نمی‌توانید نقش یا وضعیت خودتان را تغییر دهید", TITLE_REQUIRED: "عنوان فرم را وارد کنید", NOT_FOUND: "پیدا نشد"};
+
+const IC = {
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+  app: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+  dl: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  refresh: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+  del: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>',
+  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+  up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>',
+  down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  key: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></svg>',
+  out: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+};
+
+const S = {token: null, me: null, tab: null, forms: [], users: [], adminForms: [], reportForms: [], editing: null, fill: null, vals: {}, recent: [],
+  respForm: null, responses: [], respFilter: "", respTeam: "", respDays: "1", respOpt: null, userQ: "", userTeam: ""};
+const isSup = () => S.me?.role === "supervisor";
+const homeTab = r => r === "supervisor" ? "aforms" : "fill";
+const $ = s => document.querySelector(s);
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const fa = n => (n == null ? "—" : Number(n).toLocaleString("fa-IR"));
+const faNum = s => String(s ?? "").replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+const uid = () => "f" + Math.random().toString(36).slice(2, 9);
+const store = {get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }};
+function fmtDT(s) { if (!s) return "—"; try { return new Date(s).toLocaleString("fa-IR", {dateStyle: "short", timeStyle: "short"}); } catch (e) { return s; } }
+function fmtT(s) { if (!s) return "—"; try { return new Date(s).toLocaleTimeString("fa-IR", {hour: "2-digit", minute: "2-digit"}); } catch (e) { return s; } }
+function todayJ() { try { const p = new Intl.DateTimeFormat("fa-IR-u-nu-latn", {year: "numeric", month: "2-digit", day: "2-digit"}).formatToParts(new Date());
+  const g = t => p.find(x => x.type === t).value; return `${g("year")}/${g("month")}/${g("day")}`; } catch (e) { return ""; } }
+function startOfDay(days) { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (days - 1)); return d.getTime(); }
+function toast(t, err) { document.querySelectorAll(".toast").forEach(x => x.remove()); const d = document.createElement("div"); d.className = "toast" + (err ? " err" : ""); d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 2800); }
+const optsFor = (f, team) => (f.team_options && team && f.team_options[team]) || f.options || [];
+
+async function api(fn, args = {}) {
+  let res;
+  try {
+    res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {method: "POST", headers: {apikey: SUPABASE_KEY, "Content-Type": "application/json"}, body: JSON.stringify(args)});
+  } catch (e) { throw new Error("اتصال به سرور برقرار نشد. اینترنت/فیلترشکن را بررسی کنید."); }
+  const txt = await res.text(); let data = null; try { data = txt ? JSON.parse(txt) : null; } catch (e) {}
+  if (!res.ok) {
+    const m = (data && data.message) || txt || "خطا";
+    if (m === "NOT_AUTHENTICATED" && fn !== "gf_login") logout(true);
+    if (m.startsWith("REQUIRED_MISSING:")) throw new Error("این مورد اجباری است: " + m.split(":").slice(1).join(":"));
+    if (m.startsWith("INVALID_OPTION:")) throw new Error("این گزینه برای تیم شما مجاز نیست: " + m.split(":").slice(1).join(":"));
+    throw new Error(ERR[m] || m);
+  }
+  return data;
+}
+const T = () => ({p_token: S.token});
+
+/* ---------- theme: روز / شب / سیستم ---------- */
+const mq = window.matchMedia("(prefers-color-scheme: dark)");
+let themeMode = (() => { try { return localStorage.getItem("vcThemeMode") || "system"; } catch (e) { return "system"; } })();
+function applyTheme() {
+  const html = document.documentElement, dark = themeMode === "dark" || (themeMode === "system" && mq.matches);
+  html.classList.add("theme-switching"); html.setAttribute("data-theme", dark ? "dark" : "light");
+  requestAnimationFrame(() => requestAnimationFrame(() => html.classList.remove("theme-switching")));
+  document.querySelectorAll("#themeSeg button").forEach(b => b.classList.toggle("on", b.dataset.m === themeMode));
+}
+document.querySelectorAll("#themeSeg button").forEach(b => b.onclick = () => { themeMode = b.dataset.m; try { localStorage.setItem("vcThemeMode", themeMode); } catch (e) {} applyTheme(); });
+(mq.addEventListener ? mq.addEventListener("change", () => themeMode === "system" && applyTheme()) : mq.addListener(() => themeMode === "system" && applyTheme()));
+applyTheme();
+
+/* ---------- auth ---------- */
+function renderLogin(err = "") {
+  $("#app").innerHTML = `<div class="login"><div class="panel">
+    <div class="head"><div class="app-icon">${IC.app}</div><div><div class="app-title">ثبت تسک‌ها</div><div class="app-sub">ورود با شماره داخلی و ایمیل</div></div></div>
+    <form id="lf"><label class="l">داخلی</label><input class="field-in ltr" id="lu" autocomplete="username" inputmode="numeric" placeholder="مثلاً 4267">
+    <label class="l">رمز عبور (ایمیل)</label><input class="field-in ltr" id="lp" type="password" autocomplete="current-password" placeholder="name@gmail.com">
+    <div class="msg err">${esc(err)}</div>
+    <button class="btn primary" style="width:100%;justify-content:center;margin-top:6px" id="lb">ورود</button></form></div></div>`;
+  $("#lu").focus();
+  $("#lf").onsubmit = async e => { e.preventDefault(); $("#lb").disabled = true;
+    try { const r = await api("gf_login", {p_username: faNum($("#lu").value), p_password: $("#lp").value});
+      S.token = r.token; S.me = r; store.set("gf_token", r.token); S.tab = homeTab(r.role); S.respForm = null; S.vals = {}; await boot();
+    } catch (err) { renderLogin(err.message); } };
+}
+async function logout(expired) {
+  if (!expired && S.token) { try { await api("gf_logout", T()); } catch (e) {} }
+  S.token = null; S.me = null; store.set("gf_token", null); renderLogin(expired ? ERR.NOT_AUTHENTICATED : "");
+}
+async function boot() {
+  if (!S.token) { S.token = store.get("gf_token"); if (!S.token) return renderLogin(); }
+  try { S.me = await api("gf_me", T()); } catch (e) { return renderLogin(e.message); }
+  if (!S.tab) S.tab = homeTab(S.me.role);
+  go(S.tab);
+}
+
+/* ---------- shell ---------- */
+function shell(inner, narrow) {
+  const r = S.me.role;
+  const tabs = r === "supervisor" ? [["aforms", "فرم‌ها و تسک‌ها"], ["resp", "همه داده‌ها"], ["users", "کاربران"], ["fill", "ثبت تسک"]]
+             : r === "admin" ? [["fill", "ثبت تسک"], ["resp", "داده‌های تیم"]] : [];
+  $("#app").innerHTML = `<header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-brand"><img src="/assets/azkiseller.png" alt="azkiseller" onerror="this.parentNode.remove()"></div>
+      <div class="app-icon">${IC.app}</div>
+      <div><div class="app-title">ثبت تسک‌ها</div><div class="app-sub">${S.me.team ? "تیم " + esc(S.me.team) : "همه تیم‌ها"} · ${ROLES[r]}</div></div>
+    </div>
+    <div class="topbar-right">
+      ${tabs.length ? `<div class="seg">${tabs.map(([k, v]) => `<button class="${S.tab === k ? "on" : ""}" data-tab="${k}">${v}</button>`).join("")}</div>` : ""}
+      <span class="pill static"><span class="dot"></span>${esc(S.me.full_name || S.me.username)}</span>
+      <button class="pill" id="cpw" title="تغییر رمز">${IC.key}</button>
+      <button class="pill" id="lo">${IC.out} خروج</button>
+    </div></header>
+    <main class="${narrow ? "narrow" : ""}" id="main">${inner}</main>`;
+  document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => go(b.dataset.tab));
+  $("#lo").onclick = () => logout(); $("#cpw").onclick = changePw;
+}
+async function go(tab) {
+  S.tab = tab; S.editing = null;
+  shell(`<div class="panel empty">در حال بارگذاری …</div>`, tab === "fill");
+  try {
+    if (tab === "fill") { S.forms = await api("gf_my_forms", T()); if (S.forms.length === 1) await openFill(S.forms[0]); else renderMyForms(); }
+    else if (tab === "aforms") { [S.adminForms, S.users] = await Promise.all([api("gf_admin_forms", T()), api("gf_admin_users", T())]); renderAdminForms(); }
+    else if (tab === "users") { S.users = await api("gf_admin_users", T()); renderUsers(); }
+    else if (tab === "resp") { S.reportForms = await api("gf_report_forms", T());
+      if (!S.reportForms.some(f => f.id === S.respForm)) S.respForm = S.reportForms[0]?.id || null; await loadResponses(); }
+  } catch (e) { $("#main").innerHTML = `<div class="panel msg err">${esc(e.message)}</div>`; }
+}
+function dialog(html, onMount) {
+  const d = document.createElement("dialog"); d.innerHTML = html; document.body.appendChild(d);
+  const close = () => { d.close(); d.remove(); };
+  d.addEventListener("cancel", e => { e.preventDefault(); close(); });
+  d.showModal(); onMount && onMount(d, close); return d;
+}
+function confirmBox(text, onYes) {
+  dialog(`<h3>${esc(text)}</h3><div class="controls"><button class="btn danger" data-yes>بله، حذف شود</button><button class="btn ghost" data-no>انصراف</button></div>`,
+    (d, close) => { d.querySelector("[data-no]").onclick = close; d.querySelector("[data-yes]").onclick = () => { close(); onYes(); }; });
+}
+function changePw() {
+  dialog(`<h3>تغییر رمز عبور</h3><label class="l">رمز فعلی</label><input class="field-in ltr" type="password" id="po">
+    <label class="l">رمز جدید</label><input class="field-in ltr" type="password" id="pn"><div class="msg err" id="pm"></div>
+    <div class="controls"><button class="btn primary" data-yes>ذخیره</button><button class="btn ghost" data-no>انصراف</button></div>`,
+    (d, close) => { d.querySelector("[data-no]").onclick = close;
+      d.querySelector("[data-yes]").onclick = async () => {
+        try { await api("gf_change_password", {...T(), p_old: $("#po").value, p_new: $("#pn").value}); close(); toast("رمز تغییر کرد"); }
+        catch (e) { $("#pm").textContent = e.message; } }; });
+}
+
+/* ---------- fill (all roles) ---------- */
+function renderMyForms() {
+  const m = $("#main");
+  if (!S.forms.length) { m.innerHTML = `<div class="panel empty">فعلاً فرمی برای شما تعریف نشده است.</div>`; return; }
+  m.innerHTML = `<div class="page-title"><h1>فرم‌های من</h1></div>` + S.forms.map(f => `<div class="panel" style="cursor:pointer" data-id="${f.id}">
+    <h2><span class="step">${IC.app}</span>${esc(f.title)}<span class="spacer"></span><span class="count-badge"><b>${fa(f.my_today)}</b> امروز</span></h2>
+    ${f.description ? `<div class="help" style="margin:0">${esc(f.description)}</div>` : ""}</div>`).join("");
+  m.querySelectorAll("[data-id]").forEach(c => c.onclick = () => openFill(S.forms.find(f => f.id === c.dataset.id)));
+}
+function fieldBody(f) {
+  const v = S.vals[f.id];
+  if (HAS_OPTS(f.type)) {
+    const multi = f.type === "checkbox", opts = optsFor(f, S.me.team);
+    if (!opts.length) return `<div class="msg">هنوز گزینه‌ای برای تیم شما تعریف نشده است.</div>`;
+    return `<div class="opt-grid" data-opts="${f.id}">${opts.map(o => {
+      const on = multi ? (v || []).includes(o) : v === o;
+      return `<button type="button" class="opt${multi ? " multi" : ""}${on ? " sel" : ""}" data-v="${esc(o)}"><span class="ck">${IC.check}</span>${esc(o)}</button>`; }).join("")}</div>`;
+  }
+  const val = v ?? (f.type === "jdate" ? todayJ() : "");
+  switch (f.type) {
+    case "textarea": return `<textarea name="${f.id}">${esc(val)}</textarea>`;
+    case "number": return `<input class="field-in ltr" name="${f.id}" inputmode="decimal" value="${esc(val)}">`;
+    case "jdate": return `<input class="field-in ltr" name="${f.id}" placeholder="1405/08/25" value="${esc(val)}">`;
+    case "time": return `<input class="field-in ltr" name="${f.id}" type="time" value="${esc(val)}">`;
+    default: return `<input class="field-in ${f.id === "order_no" || /سفارش/.test(f.label) ? "big ltr" : ""}" name="${f.id}" autocomplete="off" value="${esc(val)}" ${/سفارش/.test(f.label) ? 'inputmode="numeric" placeholder="شماره سفارش"' : ""}>`;
+  }
+}
+async function openFill(f, okMsg = "") {
+  S.fill = f;
+  try { S.recent = await api("gf_my_responses", {...T(), p_form_id: f.id}); } catch (e) { S.recent = []; }
+  renderFill(okMsg);
+}
+function renderFill(okMsg = "") {
+  const f = S.fill, done = !f.allow_multiple && f.my_count > 0;
+  const qs = f.fields.filter(x => x.type !== "section");
+  const labelOf = (x, v) => Array.isArray(v) ? v.join("، ") : (v ?? "—");
+  let n = 0;
+  $("#main").innerHTML = `
+    ${S.forms.length > 1 ? `<button class="btn ghost sm" id="back" style="margin-bottom:14px">→ بازگشت</button>` : ""}
+    <div class="summary-row">
+      <div class="summary-card"><div class="label">ثبت امروز من</div><div class="value">${fa(f.my_today || 0)}</div></div>
+      <div class="summary-card"><div class="label">کل ثبت‌های من</div><div class="value">${fa(f.my_count || 0)}</div></div>
+      <div class="summary-card"><div class="label">آخرین ثبت</div><div class="value sm">${f.my_last ? fmtDT(f.my_last) : "—"}</div></div>
+      <div class="summary-card"><div class="label">تیم</div><div class="value sm">${esc(S.me.team || "همه تیم‌ها")}</div></div>
+    </div>
+    ${done ? `<div class="panel empty">این فرم را قبلاً ثبت کرده‌اید و فقط یک بار قابل ثبت است.</div>` : `
+    <form id="ff" autocomplete="off">
+      ${f.fields.map(x => x.type === "section"
+        ? `<div class="panel"><h2>${esc(x.label)}</h2>${x.help ? `<div class="help" style="margin:0">${esc(x.help)}</div>` : ""}</div>`
+        : `<section class="panel${n === 0 ? " top" : ""}" data-f="${x.id}"><h2><span class="step">${fa(++n)}</span>${esc(x.label)}${x.required ? ` <span class="req">*</span>` : ""}</h2>
+            ${x.help ? `<div class="help">${esc(x.help)}</div>` : ""}${fieldBody(x)}<div class="err-text" hidden></div></section>`).join("")}
+      <div class="controls"><button class="btn primary wide" id="sb">ثبت</button>
+        <button type="button" class="btn ghost" id="clr">پاک کردن</button><span class="msg ${okMsg ? "ok" : ""}" id="fm" style="margin:0">${esc(okMsg)}</span></div>
+    </form>`}
+    <section class="panel" style="margin-top:18px"><div class="tbar"><h2><span class="step">${fa(n + 1)}</span>ثبت‌های اخیر من</h2><span class="spacer"></span><span class="count-badge"><b>${fa(S.recent.length)}</b> مورد آخر</span></div>
+      <div class="tablewrap" style="max-height:380px"><table><thead><tr><th>زمان ثبت</th>${qs.map(c => `<th>${esc(c.label)}</th>`).join("")}</tr></thead><tbody>
+      ${S.recent.length ? S.recent.map(r => `<tr><td class="nowrap">${fmtDT(r.created_at)}</td>${qs.map(c => `<td>${c.id === "order_no" ? `<b>${esc(labelOf(c, r.data[c.id]))}</b>` : esc(labelOf(c, r.data[c.id]))}</td>`).join("")}</tr>`).join("")
+        : `<tr><td colspan="${qs.length + 1}" class="empty">هنوز ثبتی ندارید</td></tr>`}</tbody></table></div></section>`;
+  if ($("#back")) $("#back").onclick = () => { S.vals = {}; go("fill"); };
+  if (done) return;
+  document.querySelectorAll("[data-opts]").forEach(g => {
+    const fld = f.fields.find(x => x.id === g.dataset.opts), multi = fld.type === "checkbox";
+    g.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+      const v = b.dataset.v;
+      if (multi) { const a = new Set(S.vals[fld.id] || []); a.has(v) ? a.delete(v) : a.add(v); S.vals[fld.id] = [...a]; b.classList.toggle("sel"); }
+      else { S.vals[fld.id] = S.vals[fld.id] === v ? null : v; g.querySelectorAll(".opt").forEach(o => o.classList.toggle("sel", o.dataset.v === S.vals[fld.id])); }
+      g.closest("[data-f]").classList.remove("err-field"); g.closest("[data-f]").querySelector(".err-text").hidden = true;
+    });
+  });
+  $("#clr").onclick = () => { S.vals = {}; renderFill(); };
+  const first = document.querySelector("#ff input.field-in"); if (first) first.focus();
+  $("#ff").onsubmit = async e => {
+    e.preventDefault(); let bad = null; const data = {};
+    for (const x of f.fields) { if (x.type === "section") continue;
+      let v;
+      if (HAS_OPTS(x.type)) v = S.vals[x.id] ?? (x.type === "checkbox" ? [] : "");
+      else { v = (document.querySelector(`[name="${x.id}"]`)?.value ?? "").trim(); S.vals[x.id] = v; }
+      if (x.type === "text") v = faNum(v).trim();
+      if (x.type === "number" && v !== "") { v = faNum(v).replace(/[,٬]/g, ""); if (isNaN(Number(v))) bad = bad || [x, "عدد معتبر وارد کنید"]; else v = Number(v); }
+      if (x.type === "jdate" && v !== "") { v = faNum(v).replace(/-/g, "/"); if (!/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(v)) bad = bad || [x, "تاریخ را به شکل 1405/08/25 وارد کنید"]; }
+      const empty = v === "" || v == null || (Array.isArray(v) && !v.length);
+      if (x.required && empty) bad = bad || [x, HAS_OPTS(x.type) ? "یک گزینه را انتخاب کنید" : "این مورد اجباری است"];
+      data[x.id] = empty ? null : v;
+    }
+    document.querySelectorAll("[data-f]").forEach(b => { b.classList.remove("err-field"); b.querySelector(".err-text").hidden = true; });
+    if (bad) { const box = document.querySelector(`[data-f="${bad[0].id}"]`); box.classList.add("err-field");
+      const t = box.querySelector(".err-text"); t.textContent = bad[1]; t.hidden = false; box.scrollIntoView({behavior: "smooth", block: "center"}); return; }
+    $("#sb").disabled = true; $("#fm").className = "msg"; $("#fm").textContent = "در حال ثبت …";
+    try {
+      await api("gf_submit", {...T(), p_form_id: f.id, p_data: data});
+      S.forms = await api("gf_my_forms", T()); S.fill = S.forms.find(x => x.id === f.id) || f;
+      // keep choice answers (same task is usually repeated), clear typed answers
+      for (const x of f.fields) if (!HAS_OPTS(x.type)) delete S.vals[x.id];
+      const ord = data.order_no ? ` — سفارش ${data.order_no}` : "";
+      await openFill(S.fill, "ثبت شد ✓" + ord);
+    } catch (err) { $("#sb").disabled = false; $("#fm").className = "msg err"; $("#fm").textContent = err.message; }
+  };
+}
+
+/* ---------- supervisor: forms ---------- */
+function renderAdminForms() {
+  if (S.editing) return renderEditor();
+  const m = $("#main");
+  m.innerHTML = `<div class="page-title"><h1>فرم‌ها و تسک‌ها</h1><span class="spacer"></span><button class="btn primary" id="nf">+ فرم جدید</button></div>
+    <section class="panel"><div class="tablewrap">
+    ${!S.adminForms.length ? `<div class="empty">هنوز فرمی نساخته‌اید.</div>` :
+    `<table><thead><tr><th>عنوان</th><th>سؤال‌ها</th><th>برای</th><th>وضعیت</th><th>ثبت‌ها</th><th>آخرین ویرایش</th><th></th></tr></thead><tbody>
+    ${S.adminForms.map(f => `<tr><td><b>${esc(f.title)}</b></td><td>${fa(f.fields.filter(x => x.type !== "section").length)}</td>
+      <td>${f.assign_all ? `<span class="tag err">همه کاربران</span>` : `<span class="tag doc">${fa(f.user_ids.length)} نفر</span>`}</td>
+      <td>${f.is_active ? `<span class="tag ok">فعال</span>` : `<span class="tag bad">غیرفعال</span>`}</td>
+      <td><a href="#" class="link" style="color:var(--accent-strong);font-weight:800" data-resp="${f.id}">${fa(f.responses)}</a></td><td class="nowrap" style="color:var(--ink-soft)">${fmtDT(f.updated_at)}</td>
+      <td class="nowrap"><button class="icon-btn" data-edit="${f.id}" title="ویرایش">${IC.edit}</button><button class="icon-btn" data-dup="${f.id}" title="کپی">${IC.copy}</button><button class="icon-btn del" data-del="${f.id}" title="حذف">${IC.del}</button></td></tr>`).join("")}
+    </tbody></table>`}</div></section>`;
+  $("#nf").onclick = () => { S.editing = {id: null, title: "", description: "", fields: [{id: uid(), label: "", type: "text", required: false, options: []}], is_active: true, assign_all: true, allow_multiple: true, user_ids: []}; renderEditor(); };
+  m.querySelectorAll("[data-edit]").forEach(b => b.onclick = () => { S.editing = structuredClone(S.adminForms.find(f => f.id === b.dataset.edit)); renderEditor(); });
+  m.querySelectorAll("[data-dup]").forEach(b => b.onclick = () => { const f = structuredClone(S.adminForms.find(f => f.id === b.dataset.dup)); f.id = null; f.title += " (کپی)"; S.editing = f; renderEditor(); });
+  m.querySelectorAll("[data-resp]").forEach(a => a.onclick = e => { e.preventDefault(); S.respForm = a.dataset.resp; go("resp"); });
+  m.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { const f = S.adminForms.find(f => f.id === b.dataset.del);
+    confirmBox(`فرم «${f.title}» و همه ${fa(f.responses)} ثبت آن حذف شود؟`, async () => {
+      try { await api("gf_admin_delete_form", {...T(), p_id: f.id}); toast("حذف شد"); go("aforms"); } catch (e) { toast(e.message, 1); } }); });
+}
+const splitLines = s => String(s || "").split("\n").map(x => x.trim()).filter(Boolean);
+function readEditor() {
+  const E = S.editing; E.title = $("#et").value; E.description = $("#ed").value;
+  E.is_active = $("#ea").checked; E.allow_multiple = $("#em").checked; E.assign_all = $("#eall").checked;
+  E.user_ids = [...document.querySelectorAll("[data-u]:checked")].map(c => c.dataset.u);
+  document.querySelectorAll("[data-fi]").forEach(box => { const x = E.fields[+box.dataset.fi];
+    x.label = box.querySelector("[data-k=label]").value; x.type = box.querySelector("[data-k=type]").value;
+    x.required = !!box.querySelector("[data-k=required]")?.checked; x.help = box.querySelector("[data-k=help]").value;
+    const byTeam = box.querySelector("[data-k=byteam]");
+    if (byTeam && byTeam.checked) {
+      x.team_options = {}; box.querySelectorAll("[data-team]").forEach(t => x.team_options[t.dataset.team] = splitLines(t.value));
+      x.options = [...new Set(Object.values(x.team_options).flat())];
+    } else if (byTeam) { delete x.team_options; x.options = splitLines(box.querySelector("[data-k=options]")?.value); }
+  });
+}
+function renderEditor() {
+  const E = S.editing, m = $("#main");
+  m.innerHTML = `<div class="page-title"><button class="btn ghost sm" id="eb">→ بازگشت</button><h1>${E.id ? "ویرایش فرم" : "فرم جدید"}</h1><span class="spacer"></span><button class="btn primary" id="es">ذخیره فرم</button></div>
+    <section class="panel"><h2><span class="step">۱</span>مشخصات</h2>
+      <input class="field-in big" id="et" placeholder="عنوان فرم" value="${esc(E.title)}">
+      <textarea id="ed" placeholder="توضیحات (اختیاری)" style="margin-top:10px;min-height:70px">${esc(E.description)}</textarea>
+      <div class="radio-line" style="margin-top:12px"><label><input type="checkbox" id="ea" ${E.is_active ? "checked" : ""}> فعال باشد</label>
+      <label><input type="checkbox" id="em" ${E.allow_multiple ? "checked" : ""}> هر نفر بتواند چند بار ثبت کند</label></div></section>
+    <section class="panel"><h2><span class="step">۲</span>این فرم برای چه کسانی باشد؟</h2>
+      <div class="radio-line"><label><input type="radio" name="asg" id="eall" ${E.assign_all ? "checked" : ""}> همه کاربران</label>
+      <label><input type="radio" name="asg" id="esel" ${!E.assign_all ? "checked" : ""}> فقط افراد انتخابی</label></div>
+      <div id="ul" ${E.assign_all ? "hidden" : ""} style="margin-top:10px"><input class="field-in" id="us" placeholder="جستجوی نام یا داخلی …"><div class="ulist">
+      ${S.users.filter(u => u.active).map(u => `<label data-un="${esc((u.full_name + " " + u.username + " " + (u.team || "")).toLowerCase())}"><input type="checkbox" data-u="${u.id}" ${E.user_ids.includes(u.id) ? "checked" : ""}> ${esc(u.full_name || u.username)} <span style="color:var(--ink-faint);font-size:12px">${esc(u.username)} · ${esc(u.team || "—")}</span></label>`).join("")}
+      </div></div></section>
+    <section class="panel"><h2><span class="step">۳</span>سؤال‌ها</h2>
+    <div id="fl">${E.fields.map((x, i) => `<div class="fed" data-fi="${i}">
+      <div class="row1"><input class="field-in" data-k="label" placeholder="${x.type === "section" ? "عنوان بخش" : "متن سؤال"}" value="${esc(x.label)}">
+      <select data-k="type">${Object.entries(TYPES).map(([k, v]) => `<option value="${k}" ${(x.type === k || (x.type === "radio" && k === "select")) ? "selected" : ""}>${v}</option>`).join("")}</select></div>
+      <input class="field-in" data-k="help" placeholder="توضیح کمکی (اختیاری)" value="${esc(x.help || "")}" style="margin-top:8px">
+      ${HAS_OPTS(x.type) ? `<div class="radio-line" style="margin-top:10px"><label><input type="checkbox" data-k="byteam" ${x.team_options ? "checked" : ""}> گزینه‌ها برای هر تیم جدا باشد</label></div>
+        ${x.team_options ? `<div class="team-opts">${TEAMS.map(t => `<div><div class="tl">${t}</div><textarea data-team="${t}" placeholder="هر گزینه در یک خط">${esc((x.team_options[t] || []).join("\n"))}</textarea></div>`).join("")}</div>`
+        : `<textarea data-k="options" placeholder="هر گزینه در یک خط" style="margin-top:8px">${esc((x.options || []).join("\n"))}</textarea>`}` : ""}
+      <div class="tools">${x.type !== "section" ? `<label><input type="checkbox" data-k="required" ${x.required ? "checked" : ""}> اجباری</label>` : ""}
+      <span class="spacer"></span><button class="icon-btn" data-mv="-1" title="بالا">${IC.up}</button><button class="icon-btn" data-mv="1" title="پایین">${IC.down}</button>
+      <button class="icon-btn" data-cp title="تکثیر">${IC.copy}</button><button class="icon-btn del" data-rm title="حذف">${IC.del}</button></div></div>`).join("")}</div>
+    <div class="controls"><button class="btn ghost" id="af">+ افزودن سؤال</button><button class="btn ghost" id="asec">+ عنوان بخش</button><span class="spacer"></span><button class="btn primary" id="es2">ذخیره فرم</button></div></section>`;
+  $("#eb").onclick = () => { S.editing = null; renderAdminForms(); };
+  $("#eall").onchange = $("#esel").onchange = () => $("#ul").hidden = $("#eall").checked;
+  $("#us").oninput = () => { const q = $("#us").value.toLowerCase(); document.querySelectorAll("[data-un]").forEach(l => l.style.display = l.dataset.un.includes(q) ? "" : "none"); };
+  m.querySelectorAll("[data-k=type]").forEach(s => s.onchange = () => { readEditor(); renderEditor(); });
+  m.querySelectorAll("[data-k=byteam]").forEach(c => c.onchange = () => { const x = E.fields[+c.closest("[data-fi]").dataset.fi]; readEditor();
+    if (c.checked) { x.team_options = Object.fromEntries(TEAMS.map(t => [t, x.options || []])); } else { x.options = [...new Set(Object.values(x.team_options || {}).flat())]; delete x.team_options; }
+    renderEditor(); });
+  m.querySelectorAll("[data-fi]").forEach(box => { const i = +box.dataset.fi;
+    box.querySelectorAll("[data-mv]").forEach(b => b.onclick = () => { readEditor(); const j = i + +b.dataset.mv; if (j < 0 || j >= E.fields.length) return; [E.fields[i], E.fields[j]] = [E.fields[j], E.fields[i]]; renderEditor(); });
+    box.querySelector("[data-cp]").onclick = () => { readEditor(); E.fields.splice(i + 1, 0, {...structuredClone(E.fields[i]), id: uid()}); renderEditor(); };
+    box.querySelector("[data-rm]").onclick = () => { readEditor(); E.fields.splice(i, 1); renderEditor(); }; });
+  $("#af").onclick = () => { readEditor(); E.fields.push({id: uid(), label: "", type: "text", required: false, options: []}); renderEditor(); $("#fl").lastElementChild.querySelector("input").focus(); };
+  $("#asec").onclick = () => { readEditor(); E.fields.push({id: uid(), label: "", type: "section", required: false}); renderEditor(); };
+  $("#es").onclick = $("#es2").onclick = saveForm;
+}
+async function saveForm() {
+  readEditor(); const E = S.editing;
+  if (!E.title.trim()) return toast("عنوان فرم را وارد کنید", 1);
+  if (E.fields.some(x => !x.label.trim())) return toast("متن همه سؤال‌ها را پر کنید", 1);
+  if (E.fields.some(x => HAS_OPTS(x.type) && !(x.options || []).length)) return toast("برای سؤال‌های گزینه‌ای حداقل یک گزینه بنویسید", 1);
+  if (!E.assign_all && !E.user_ids.length) return toast("حداقل یک نفر را انتخاب کنید", 1);
+  const fields = E.fields.map(x => ({id: x.id, label: x.label.trim(), type: x.type === "radio" ? "select" : x.type, required: !!x.required && x.type !== "section", help: (x.help || "").trim(),
+    ...(HAS_OPTS(x.type) ? {options: x.options, ...(x.team_options ? {team_options: x.team_options} : {})} : {})}));
+  try { await api("gf_admin_save_form", {...T(), p_id: E.id, p_title: E.title, p_description: E.description, p_fields: fields, p_is_active: E.is_active, p_assign_all: E.assign_all, p_allow_multiple: E.allow_multiple, p_user_ids: E.assign_all ? [] : E.user_ids});
+    toast("ذخیره شد ✓"); go("aforms"); } catch (e) { toast(e.message, 1); }
+}
+
+/* ---------- reports: admin = own team, supervisor = all ---------- */
+async function loadResponses() {
+  S.responses = S.respForm ? await api("gf_admin_responses", {...T(), p_form_id: S.respForm}) : []; renderResponses();
+}
+const cellVal = v => v == null ? "" : Array.isArray(v) ? v.join("، ") : String(v);
+function baseRows() {
+  const days = +S.respDays, from = days ? startOfDay(days) : 0;
+  return S.responses.filter(r => (!S.respTeam || r.team === S.respTeam) && (!from || new Date(r.created_at).getTime() >= from));
+}
+function renderResponses() {
+  const m = $("#main"), f = S.reportForms.find(x => x.id === S.respForm), sup = isSup();
+  if (!S.reportForms.length) { m.innerHTML = `<div class="panel empty">هنوز فرمی وجود ندارد.</div>`; return; }
+  const cols = (f?.fields || []).filter(x => x.type !== "section");
+  const optF = cols.find(x => HAS_OPTS(x.type) && x.type !== "checkbox");
+  const team = sup ? S.respTeam : S.me.team;
+  const base = baseRows(), q = S.respFilter.trim().toLowerCase();
+  const rows = base.filter(r => (!S.respOpt || !optF || r.data[optF.id] === S.respOpt) &&
+    (!q || [r.full_name, r.username, r.team, ...cols.map(c => cellVal(r.data[c.id]))].join(" ").toLowerCase().includes(q)));
+  const today0 = startOfDay(1);
+  const people = new Set(base.map(r => r.user_id)).size, orders = optF ? new Set(base.map(r => r.data.order_no).filter(Boolean)).size : null;
+  const optCounts = {}; if (optF) base.forEach(r => { const v = r.data[optF.id]; if (v) optCounts[v] = (optCounts[v] || 0) + 1; });
+  const optList = optF ? [...new Set([...optsFor(optF, team), ...Object.keys(optCounts)])] : [];
+  const byUser = {}; rows.forEach(r => { const k = r.user_id || "?"; (byUser[k] = byUser[k] || {n: r.full_name || r.username || "—", u: r.username, t: r.team, c: 0}).c++; });
+  const people2 = Object.values(byUser).sort((a, b) => b.c - a.c), maxC = people2[0]?.c || 1;
+  const LIMIT = 800;
+  m.innerHTML = `<div class="page-title"><h1>${sup ? "همه داده‌ها" : "داده‌های تیم " + esc(S.me.team || "")}</h1><span class="sub">${f ? esc(f.title) : ""}</span></div>
+    <section class="panel top"><div class="controls">
+      ${S.reportForms.length > 1 ? `<span class="ctl">فرم <select id="rf">${S.reportForms.map(x => `<option value="${x.id}" ${x.id === S.respForm ? "selected" : ""}>${esc(x.title)}</option>`).join("")}</select></span>` : ""}
+      <span class="ctl">بازه <select id="rd">${[["1", "امروز"], ["7", "۷ روز اخیر"], ["30", "۳۰ روز اخیر"], ["0", "همه"]].map(([v, t]) => `<option value="${v}" ${S.respDays === v ? "selected" : ""}>${t}</option>`).join("")}</select></span>
+      ${sup ? `<span class="ctl">تیم <select id="rt"><option value="">همه تیم‌ها</option>${TEAMS.map(t => `<option ${S.respTeam === t ? "selected" : ""}>${t}</option>`).join("")}</select></span>` : ""}
+      <span class="spacer"></span>
+      <button class="btn ghost sm" id="rr">${IC.refresh} بروزرسانی</button>
+      <button class="btn primary" id="rx" ${rows.length ? "" : "disabled"}>${IC.dl} دانلود Excel</button>
+    </div></section>
+    <div class="summary-row">
+      <div class="summary-card"><div class="label">کل ثبت‌ها</div><div class="value">${fa(base.length)}</div></div>
+      <div class="summary-card"><div class="label">ثبت امروز</div><div class="value">${fa(base.filter(r => new Date(r.created_at).getTime() >= today0).length)}</div></div>
+      <div class="summary-card"><div class="label">تعداد نفرات</div><div class="value">${fa(people)}</div></div>
+      <div class="summary-card"><div class="label">${orders != null ? "سفارش یکتا" : "میانگین هر نفر"}</div><div class="value">${orders != null ? fa(orders) : fa(people ? Math.round(10 * base.length / people) / 10 : 0)}</div></div>
+    </div>
+    ${optF && optList.length ? `<div class="chips">${optList.map(o => `<div class="chip${S.respOpt === o ? " sel" : ""}${optCounts[o] ? "" : " zero"}" data-o="${esc(o)}"><div class="n">${fa(optCounts[o] || 0)}</div><div class="t">${esc(o)}</div></div>`).join("")}</div>` : ""}
+    <section class="panel"><div class="tbar"><h2><span class="step">۱</span>ثبت‌ها</h2>
+      <input class="field-in search" id="rq" placeholder="جستجو (شماره سفارش، تسک، نام، داخلی …)" value="${esc(S.respFilter)}">
+      <span class="count-badge"><b>${fa(rows.length)}</b> ثبت</span></div>
+      <div class="tablewrap"><table><thead><tr><th>زمان ثبت</th><th>ثبت‌کننده</th><th>داخلی</th>${sup ? "<th>تیم</th>" : ""}${cols.map(c => `<th>${esc(c.label)}</th>`).join("")}${sup ? "<th></th>" : ""}</tr></thead><tbody>
+      ${rows.length ? rows.slice(0, LIMIT).map(r => `<tr><td class="nowrap">${fmtDT(r.created_at)}</td><td class="nowrap">${esc(r.full_name || "—")}</td><td>${esc(r.username || "")}</td>${sup ? `<td class="nowrap">${esc(r.team || "—")}</td>` : ""}
+        ${cols.map(c => c.id === "order_no" ? `<td class="code"><b>${esc(cellVal(r.data[c.id]))}</b></td>` : `<td>${esc(cellVal(r.data[c.id]))}</td>`).join("")}${sup ? `<td><button class="icon-btn del" data-dr="${r.id}" title="حذف">${IC.del}</button></td>` : ""}</tr>`).join("")
+        : `<tr><td colspan="${cols.length + (sup ? 5 : 3)}" class="empty">داده‌ای برای نمایش نیست</td></tr>`}</tbody></table>
+      ${rows.length > LIMIT ? `<div class="more">نمایش ${fa(LIMIT)} از ${fa(rows.length)} — فایل Excel همه را دارد</div>` : ""}</div></section>
+    ${people2.length ? `<section class="panel"><div class="tbar"><h2><span class="step">۲</span>به تفکیک نفرات</h2></div>
+      <div class="tablewrap" style="max-height:420px"><table><thead><tr><th>ثبت‌کننده</th><th>داخلی</th>${sup ? "<th>تیم</th>" : ""}<th>تعداد ثبت</th></tr></thead><tbody>
+      ${people2.map(p => `<tr><td>${esc(p.n)}</td><td>${esc(p.u || "")}</td>${sup ? `<td>${esc(p.t || "—")}</td>` : ""}<td><div class="bar-cell"><b style="min-width:34px">${fa(p.c)}</b><span style="width:${Math.max(4, 160 * p.c / maxC)}px"></span></div></td></tr>`).join("")}
+      </tbody></table></div></section>` : ""}`;
+  if ($("#rf")) $("#rf").onchange = async e => { S.respForm = e.target.value; S.respFilter = ""; S.respOpt = null; await loadResponses(); };
+  $("#rq").oninput = e => { S.respFilter = e.target.value; const p = e.target.selectionStart; renderResponses(); const n = $("#rq"); n.focus(); n.setSelectionRange(p, p); };
+  $("#rd").onchange = e => { S.respDays = e.target.value; renderResponses(); };
+  if ($("#rt")) $("#rt").onchange = e => { S.respTeam = e.target.value; S.respOpt = null; renderResponses(); };
+  m.querySelectorAll("[data-o]").forEach(c => c.onclick = () => { S.respOpt = S.respOpt === c.dataset.o ? null : c.dataset.o; renderResponses(); });
+  $("#rr").onclick = loadResponses;
+  $("#rx").onclick = () => exportExcel(f, cols, rows, optF, optList);
+  m.querySelectorAll("[data-dr]").forEach(b => b.onclick = () => confirmBox("این ثبت حذف شود؟", async () => {
+    try { await api("gf_admin_delete_response", {...T(), p_id: b.dataset.dr}); await loadResponses(); toast("حذف شد"); } catch (e) { toast(e.message, 1); } }));
+}
+function loadScript(src) { return new Promise((ok, no) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
+function download(blob, name) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
+async function exportExcel(f, cols, rows, optF, optList) {
+  const head = ["زمان ثبت", "ثبت‌کننده", "داخلی", "تیم", ...cols.map(c => c.label)];
+  const data = rows.map(r => [fmtDT(r.created_at), r.full_name || "", r.username || "", r.team || "", ...cols.map(c => cellVal(r.data[c.id]))]);
+  // summary: one row per person, one column per option
+  let sum = null;
+  if (optF) {
+    const per = {};
+    rows.forEach(r => { const k = r.user_id || r.username; const p = per[k] = per[k] || {n: r.full_name || "", u: r.username || "", t: r.team || "", c: {}, s: 0};
+      const v = r.data[optF.id]; if (v) p.c[v] = (p.c[v] || 0) + 1; p.s++; });
+    const opts = optList.filter(o => Object.values(per).some(p => p.c[o]));
+    sum = [["ثبت‌کننده", "داخلی", "تیم", ...opts, "جمع"], ...Object.values(per).sort((a, b) => b.s - a.s).map(p => [p.n, p.u, p.t, ...opts.map(o => p.c[o] || 0), p.s])];
+  }
+  const days = {"1": "امروز", "7": "۷ روز", "30": "۳۰ روز", "0": "همه"}[S.respDays] || "";
+  const teamName = isSup() ? (S.respTeam || "همه تیم‌ها") : (S.me.team || "");
+  const name = `${f.title} - ${teamName} - ${days} ${todayJ().replace(/\//g, "-")}`;
+  const btn = $("#rx"); if (btn) btn.disabled = true;
+  try {
+    if (!window.XLSX) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js");
+    const mk = aoa => { const ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws["!cols"] = aoa[0].map((h, i) => ({wch: Math.min(45, Math.max(String(h).length, ...aoa.slice(1, 300).map(r => String(r[i] ?? "").length)) + 2)})); return ws; };
+    const wb = XLSX.utils.book_new(); wb.Workbook = {Views: [{RTL: true}]};
+    XLSX.utils.book_append_sheet(wb, mk([head, ...data]), "ثبت‌ها");
+    if (sum) XLSX.utils.book_append_sheet(wb, mk(sum), "خلاصه نفرات");
+    XLSX.writeFile(wb, `${name}.xlsx`);
+  } catch (e) {
+    const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    download(new Blob(["﻿" + [head, ...data].map(r => r.map(q).join(",")).join("\r\n")], {type: "text/csv;charset=utf-8"}), `${name}.csv`);
+    toast("کتابخانه Excel بارگذاری نشد؛ فایل CSV دانلود شد", 1);
+  } finally { if (btn) btn.disabled = false; }
+}
+
+/* ---------- supervisor: users ---------- */
+function renderUsers() {
+  const m = $("#main"), q = S.userQ.toLowerCase(), tf = S.userTeam;
+  const list = S.users.filter(u => (!tf || u.team === tf) && (!q || (u.full_name + " " + u.username).toLowerCase().includes(q)));
+  const cnt = r => S.users.filter(u => u.role === r && (!tf || u.team === tf)).length;
+  m.innerHTML = `<div class="page-title"><h1>کاربران</h1><span class="spacer"></span><button class="btn primary" id="nu">+ کاربر جدید</button></div>
+    <div class="summary-row">
+      <div class="summary-card"><div class="label">کل افراد</div><div class="value">${fa(S.users.filter(u => !tf || u.team === tf).length)}</div></div>
+      <div class="summary-card"><div class="label">ادمین</div><div class="value">${fa(cnt("admin"))}</div></div>
+      <div class="summary-card"><div class="label">کاربر</div><div class="value">${fa(cnt("user"))}</div></div>
+      <div class="summary-card"><div class="label">غیرفعال</div><div class="value">${fa(S.users.filter(u => !u.active && (!tf || u.team === tf)).length)}</div></div>
+    </div>
+    <section class="panel"><div class="tbar"><h2><span class="step">۱</span>افراد</h2>
+      <input class="field-in search" id="uq" placeholder="جستجوی نام یا داخلی …" value="${esc(S.userQ)}">
+      <select id="ut"><option value="">همه تیم‌ها</option>${TEAMS.map(t => `<option ${tf === t ? "selected" : ""}>${t}</option>`).join("")}</select>
+      <span class="count-badge"><b>${fa(list.length)}</b> نفر</span></div>
+    <div class="tablewrap"><table><thead><tr><th>نام</th><th>داخلی</th><th>تیم</th><th>نقش</th><th>وضعیت</th><th>تعداد ثبت</th><th></th></tr></thead><tbody>
+    ${list.map(u => `<tr><td><b>${esc(u.full_name)}</b></td><td class="code" style="text-align:right">${esc(u.username)}</td><td>${esc(u.team || "—")}</td>
+      <td><span class="tag ${u.role === "user" ? "err" : u.role === "admin" ? "doc" : "warn"}">${ROLES[u.role] || u.role}</span></td>
+      <td>${u.active ? `<span class="tag ok">فعال</span>` : `<span class="tag bad">غیرفعال</span>`}</td>
+      <td>${fa(u.responses)}</td><td><button class="icon-btn" data-eu="${u.id}" title="ویرایش">${IC.edit}</button></td></tr>`).join("") || `<tr><td colspan="7" class="empty">کسی پیدا نشد</td></tr>`}</tbody></table></div></section>`;
+  $("#nu").onclick = () => userDialog(null);
+  $("#uq").oninput = e => { S.userQ = e.target.value; const p = e.target.selectionStart; renderUsers(); const n = $("#uq"); n.focus(); n.setSelectionRange(p, p); };
+  $("#ut").onchange = e => { S.userTeam = e.target.value; renderUsers(); };
+  m.querySelectorAll("[data-eu]").forEach(b => b.onclick = () => userDialog(S.users.find(u => u.id === b.dataset.eu)));
+}
+function userDialog(u) {
+  const isNew = !u; u = u || {username: "", full_name: "", role: "user", active: true, team: S.userTeam || ""};
+  dialog(`<h3>${isNew ? "کاربر جدید" : "ویرایش کاربر"}</h3>
+    <label class="l">نام و نام خانوادگی</label><input class="field-in" id="uf" value="${esc(u.full_name)}">
+    <label class="l">داخلی (نام کاربری)</label><input class="field-in ltr" id="uu" value="${esc(u.username)}">
+    <label class="l">${isNew ? "رمز عبور (ایمیل)" : "رمز جدید — خالی = بدون تغییر"}</label><input class="field-in ltr" id="up" placeholder="name@gmail.com">
+    <div class="grid2"><div><label class="l">تیم</label><select id="utm"><option value="">—</option>${TEAMS.map(t => `<option ${u.team === t ? "selected" : ""}>${t}</option>`).join("")}</select></div>
+    <div><label class="l">نقش</label><select id="ur">${Object.entries(ROLES).map(([k, v]) => `<option value="${k}" ${u.role === k ? "selected" : ""}>${v}</option>`).join("")}</select></div></div>
+    <div class="radio-line" style="margin-top:12px"><label><input type="checkbox" id="ua" ${u.active ? "checked" : ""}> فعال</label></div>
+    <div class="msg err" id="um"></div>
+    <div class="controls"><button class="btn primary" data-yes>ذخیره</button><button class="btn ghost" data-no>انصراف</button></div>`,
+  (d, close) => {
+    d.querySelector("[data-no]").onclick = close;
+    d.querySelector("[data-yes]").onclick = async () => {
+      const pw = $("#up").value.trim(), uname = faNum($("#uu").value).trim().toLowerCase();
+      if ($("#ur").value !== "supervisor" && !$("#utm").value) { $("#um").textContent = "تیم را انتخاب کنید"; return; }
+      try { await api("gf_admin_save_user", {...T(), p_id: u.id || null, p_username: uname, p_full_name: $("#uf").value.trim(), p_password: pw, p_role: $("#ur").value, p_active: $("#ua").checked, p_team: $("#utm").value});
+        close(); toast("ذخیره شد ✓"); go("users");
+      } catch (e) { $("#um").textContent = e.message; } };
+  });
+}
+
+boot();
+</script>
+</body>
+</html>
