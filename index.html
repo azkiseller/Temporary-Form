@@ -284,6 +284,19 @@ dialog pre { background: var(--surface-tint); border: 1px solid var(--line); bor
 .radio-line { display: flex; gap: 18px; flex-wrap: wrap; }
 .radio-line label { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; cursor: pointer; }
 
+.team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+@media (max-width: 900px) { .team-grid { grid-template-columns: 1fr; } }
+.team-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; background: var(--surface-tint); cursor: pointer; transition: .15s; }
+.team-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.team-card.sel { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.team-card .th { display: flex; align-items: center; font-size: 15px; font-weight: 800; }
+.team-card .tn { font-size: 24px; font-weight: 900; color: var(--accent-deep); font-variant-numeric: tabular-nums; }
+.team-card .ts { font-size: 11.5px; color: var(--ink-faint); margin-bottom: 8px; }
+.team-card .trow { display: grid; grid-template-columns: 1fr 70px 30px; align-items: center; gap: 8px; font-size: 12px; padding: 3px 0; border-top: 1px dashed var(--line); }
+.team-card .trow .tl { color: var(--ink-soft); line-height: 1.6; }
+.team-card .trow b { text-align: left; font-variant-numeric: tabular-nums; }
+.team-card .tbar2 { height: 6px; border-radius: 999px; background: var(--accent-soft); overflow: hidden; }
+.team-card .tbar2 i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent-deep), var(--accent)); border-radius: 999px; }
 .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 10000; padding: 10px 20px; border-radius: 999px; font-size: 13px; font-weight: 700;
   background: var(--pop-bg); color: var(--ink); border: 1px solid var(--line); box-shadow: var(--shadow-float); animation: rise .18s ease;
   -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
@@ -314,7 +327,7 @@ const HAS_OPTS = t => ["select", "radio", "checkbox"].includes(t);
 const ERR = {INVALID_LOGIN: "داخلی یا رمز عبور اشتباه است", NOT_AUTHENTICATED: "نشست شما منقضی شده؛ دوباره وارد شوید", FORBIDDEN: "دسترسی ندارید",
   FORM_NOT_AVAILABLE: "این فرم در دسترس نیست", ALREADY_SUBMITTED: "این فرم را قبلاً ثبت کرده‌اید", WRONG_PASSWORD: "رمز فعلی اشتباه است",
   WEAK_PASSWORD: "رمز باید حداقل ۶ کاراکتر باشد", BAD_USERNAME: "نام کاربری فقط عدد، حروف انگلیسی و . _ - @ (حداقل ۳ کاراکتر)", USERNAME_TAKEN: "این نام کاربری قبلاً ثبت شده",
-  CANNOT_DEMOTE_SELF: "نمی‌توانید نقش یا وضعیت خودتان را تغییر دهید", TITLE_REQUIRED: "عنوان فرم را وارد کنید", NOT_FOUND: "پیدا نشد"};
+  SUBMIT_NOT_ALLOWED: "ثبت تسک فقط برای کاربران است؛ نقش شما نظارتی است", CANNOT_DEMOTE_SELF: "نمی‌توانید نقش یا وضعیت خودتان را تغییر دهید", TITLE_REQUIRED: "عنوان فرم را وارد کنید", NOT_FOUND: "پیدا نشد"};
 
 const IC = {
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
@@ -333,7 +346,7 @@ const IC = {
 const S = {token: null, me: null, tab: null, forms: [], users: [], adminForms: [], reportForms: [], editing: null, fill: null, vals: {}, recent: [],
   respForm: null, responses: [], respFilter: "", respTeam: "", respDays: "1", respOpt: null, userQ: "", userTeam: ""};
 const isSup = () => S.me?.role === "supervisor";
-const homeTab = r => r === "supervisor" ? "aforms" : "fill";
+const homeTab = r => r === "user" ? "fill" : "resp";
 const $ = s => document.querySelector(s);
 const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
 const fa = n => (n == null ? "—" : Number(n).toLocaleString("fa-IR"));
@@ -382,7 +395,7 @@ applyTheme();
 function renderLogin(err = "") {
   $("#app").innerHTML = `<div class="login"><div class="panel">
     <div class="head"><div class="app-icon">${IC.app}</div><div><div class="app-title">ثبت تسک‌ها</div><div class="app-sub">ورود با شماره داخلی و ایمیل</div></div></div>
-    <form id="lf"><label class="l">داخلی</label><input class="field-in ltr" id="lu" autocomplete="username" inputmode="numeric" placeholder="مثلاً 4267">
+    <form id="lf"><label class="l">داخلی (نام کاربری)</label><input class="field-in ltr" id="lu" autocomplete="username" placeholder="مثلاً 4267">
     <label class="l">رمز عبور (ایمیل)</label><input class="field-in ltr" id="lp" type="password" autocomplete="current-password" placeholder="name@gmail.com">
     <div class="msg err">${esc(err)}</div>
     <button class="btn primary" style="width:100%;justify-content:center;margin-top:6px" id="lb">ورود</button></form></div></div>`;
@@ -406,16 +419,15 @@ async function boot() {
 /* ---------- shell ---------- */
 function shell(inner, narrow) {
   const r = S.me.role;
-  const tabs = r === "supervisor" ? [["aforms", "فرم‌ها و تسک‌ها"], ["resp", "همه داده‌ها"], ["users", "کاربران"], ["fill", "ثبت تسک"]]
-             : r === "admin" ? [["fill", "ثبت تسک"], ["resp", "داده‌های تیم"]] : [];
+  const tabs = r === "supervisor" ? [["resp", "نظارت همه تیم‌ها"], ["aforms", "فرم‌ها و تسک‌ها"], ["users", "کاربران"]] : [];
   $("#app").innerHTML = `<header class="topbar">
     <div class="topbar-left">
       <div class="topbar-brand"><img src="/assets/azkiseller.png" alt="azkiseller" onerror="this.parentNode.remove()"></div>
       <div class="app-icon">${IC.app}</div>
-      <div><div class="app-title">ثبت تسک‌ها</div><div class="app-sub">${S.me.team ? "تیم " + esc(S.me.team) : "همه تیم‌ها"} · ${ROLES[r]}</div></div>
+      <div><div class="app-title">${r === "user" ? "ثبت تسک‌ها" : "نظارت بر تسک‌ها"}</div><div class="app-sub">${S.me.team ? "تیم " + esc(S.me.team) : "همه تیم‌ها"} · ${ROLES[r]}</div></div>
     </div>
     <div class="topbar-right">
-      ${tabs.length ? `<div class="seg">${tabs.map(([k, v]) => `<button class="${S.tab === k ? "on" : ""}" data-tab="${k}">${v}</button>`).join("")}</div>` : ""}
+      ${tabs.length > 1 ? `<div class="seg">${tabs.map(([k, v]) => `<button class="${S.tab === k ? "on" : ""}" data-tab="${k}">${v}</button>`).join("")}</div>` : ""}
       <span class="pill static"><span class="dot"></span>${esc(S.me.full_name || S.me.username)}</span>
       <button class="pill" id="cpw" title="تغییر رمز">${IC.key}</button>
       <button class="pill" id="lo">${IC.out} خروج</button>
@@ -428,6 +440,7 @@ async function go(tab) {
   S.tab = tab; S.editing = null;
   shell(`<div class="panel empty">در حال بارگذاری …</div>`, tab === "fill");
   try {
+    if (tab === "fill" && S.me.role !== "user") { return go("resp"); }
     if (tab === "fill") { S.forms = await api("gf_my_forms", T()); if (S.forms.length === 1) await openFill(S.forms[0]); else renderMyForms(); }
     else if (tab === "aforms") { [S.adminForms, S.users] = await Promise.all([api("gf_admin_forms", T()), api("gf_admin_users", T())]); renderAdminForms(); }
     else if (tab === "users") { S.users = await api("gf_admin_users", T()); renderUsers(); }
@@ -669,7 +682,7 @@ function renderResponses() {
   const byUser = {}; rows.forEach(r => { const k = r.user_id || "?"; (byUser[k] = byUser[k] || {n: r.full_name || r.username || "—", u: r.username, t: r.team, c: 0}).c++; });
   const people2 = Object.values(byUser).sort((a, b) => b.c - a.c), maxC = people2[0]?.c || 1;
   const LIMIT = 800;
-  m.innerHTML = `<div class="page-title"><h1>${sup ? "همه داده‌ها" : "داده‌های تیم " + esc(S.me.team || "")}</h1><span class="sub">${f ? esc(f.title) : ""}</span></div>
+  m.innerHTML = `<div class="page-title"><h1>${sup ? "نظارت همه تیم‌ها" : "نظارت تیم " + esc(S.me.team || "")}</h1><span class="sub">${f ? esc(f.title) : ""}</span></div>
     <section class="panel top"><div class="controls">
       ${S.reportForms.length > 1 ? `<span class="ctl">فرم <select id="rf">${S.reportForms.map(x => `<option value="${x.id}" ${x.id === S.respForm ? "selected" : ""}>${esc(x.title)}</option>`).join("")}</select></span>` : ""}
       <span class="ctl">بازه <select id="rd">${[["1", "امروز"], ["7", "۷ روز اخیر"], ["30", "۳۰ روز اخیر"], ["0", "همه"]].map(([v, t]) => `<option value="${v}" ${S.respDays === v ? "selected" : ""}>${t}</option>`).join("")}</select></span>
@@ -684,6 +697,7 @@ function renderResponses() {
       <div class="summary-card"><div class="label">تعداد نفرات</div><div class="value">${fa(people)}</div></div>
       <div class="summary-card"><div class="label">${orders != null ? "سفارش یکتا" : "میانگین هر نفر"}</div><div class="value">${orders != null ? fa(orders) : fa(people ? Math.round(10 * base.length / people) / 10 : 0)}</div></div>
     </div>
+    ${sup ? teamOverview(f, optF) : ""}
     ${optF && optList.length ? `<div class="chips">${optList.map(o => `<div class="chip${S.respOpt === o ? " sel" : ""}${optCounts[o] ? "" : " zero"}" data-o="${esc(o)}"><div class="n">${fa(optCounts[o] || 0)}</div><div class="t">${esc(o)}</div></div>`).join("")}</div>` : ""}
     <section class="panel"><div class="tbar"><h2><span class="step">۱</span>ثبت‌ها</h2>
       <input class="field-in search" id="rq" placeholder="جستجو (شماره سفارش، تسک، نام، داخلی …)" value="${esc(S.respFilter)}">
@@ -701,11 +715,27 @@ function renderResponses() {
   $("#rq").oninput = e => { S.respFilter = e.target.value; const p = e.target.selectionStart; renderResponses(); const n = $("#rq"); n.focus(); n.setSelectionRange(p, p); };
   $("#rd").onchange = e => { S.respDays = e.target.value; renderResponses(); };
   if ($("#rt")) $("#rt").onchange = e => { S.respTeam = e.target.value; S.respOpt = null; renderResponses(); };
+  m.querySelectorAll("[data-team-card]").forEach(c => c.onclick = () => { S.respTeam = S.respTeam === c.dataset.teamCard ? "" : c.dataset.teamCard; S.respOpt = null; renderResponses(); });
   m.querySelectorAll("[data-o]").forEach(c => c.onclick = () => { S.respOpt = S.respOpt === c.dataset.o ? null : c.dataset.o; renderResponses(); });
   $("#rr").onclick = loadResponses;
   $("#rx").onclick = () => exportExcel(f, cols, rows, optF, optList);
   m.querySelectorAll("[data-dr]").forEach(b => b.onclick = () => confirmBox("این ثبت حذف شود؟", async () => {
     try { await api("gf_admin_delete_response", {...T(), p_id: b.dataset.dr}); await loadResponses(); toast("حذف شد"); } catch (e) { toast(e.message, 1); } }));
+}
+function teamOverview(f, optF) {
+  const days = +S.respDays, from = days ? startOfDay(days) : 0;
+  const inRange = S.responses.filter(r => !from || new Date(r.created_at).getTime() >= from);
+  return `<section class="panel"><div class="tbar"><h2><span class="step">${IC.app}</span>به تفکیک تیم</h2><span class="spacer"></span><span style="color:var(--ink-faint);font-size:12px">برای فیلتر روی هر تیم کلیک کنید</span></div>
+    <div class="team-grid">${TEAMS.map(t => {
+      const rs = inRange.filter(r => r.team === t), people = new Set(rs.map(r => r.user_id)).size;
+      const cnt = {}; if (optF) rs.forEach(r => { const v = r.data[optF.id]; if (v) cnt[v] = (cnt[v] || 0) + 1; });
+      const opts = optF ? [...new Set([...optsFor(optF, t), ...Object.keys(cnt)])] : [];
+      const max = Math.max(1, ...Object.values(cnt));
+      return `<div class="team-card${S.respTeam === t ? " sel" : ""}" data-team-card="${t}">
+        <div class="th"><b>${t}</b><span class="spacer"></span><span class="tn">${fa(rs.length)}</span></div>
+        <div class="ts">${fa(people)} نفر ثبت داشته‌اند</div>
+        ${opts.map(o => `<div class="trow"><span class="tl">${esc(o)}</span><span class="tbar2"><i style="width:${100 * (cnt[o] || 0) / max}%"></i></span><b>${fa(cnt[o] || 0)}</b></div>`).join("")}
+      </div>`; }).join("")}</div></section>`;
 }
 function loadScript(src) { return new Promise((ok, no) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
 function download(blob, name) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
