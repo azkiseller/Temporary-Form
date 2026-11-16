@@ -42,6 +42,7 @@
   --font: 'IRANSansX', 'Vazirmatn', Tahoma, sans-serif;
   --topbar-bg: rgba(255,255,255,.4);
   --pop-bg: rgba(255,255,255,.94);
+  --pop-solid: #F7FBFF;
   --th-bg: rgba(225,240,255,.92);
 }
 html[data-theme="dark"] {
@@ -58,6 +59,7 @@ html[data-theme="dark"] {
   --shadow-float: 0 24px 60px -16px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.1);
   --topbar-bg: rgba(10,15,28,.22);
   --pop-bg: rgba(18,25,45,.96);
+  --pop-solid: #141c31;
   --th-bg: rgba(22,32,58,.96);
   color-scheme: dark;
 }
@@ -297,6 +299,39 @@ dialog pre { background: var(--surface-tint); border: 1px solid var(--line); bor
 .team-card .trow b { text-align: left; font-variant-numeric: tabular-nums; }
 .team-card .tbar2 { height: 6px; border-radius: 999px; background: var(--accent-soft); overflow: hidden; }
 .team-card .tbar2 i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent-deep), var(--accent)); border-radius: 999px; }
+.pickbox { position: relative; }
+.pickbtn { display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); background: var(--surface-tint); color: var(--ink);
+  border-radius: var(--radius-sm); padding: 6px 12px; font-size: 13px; font-weight: 700; cursor: pointer; min-height: 38px; font-family: var(--font); }
+.pickbtn:hover, .pickbtn.open { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.pickbtn svg { color: var(--accent); flex-shrink: 0; }
+.pop { position: absolute; top: calc(100% + 8px); right: 0; z-index: 60; padding: 14px; border-radius: var(--radius); border: 1px solid var(--line);
+  background: var(--pop-solid); box-shadow: var(--shadow-float); animation: rise2 .18s ease; }
+@keyframes rise2 { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.cal { width: 292px; }
+.cal .hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-weight: 800; color: var(--ink); }
+.cal .nav { border: 1px solid var(--line); background: var(--surface-tint); color: var(--ink); width: 30px; height: 30px; border-radius: 9px; cursor: pointer; font-size: 16px; line-height: 1; }
+.cal .nav:hover { border-color: var(--accent); color: var(--accent-strong); }
+.cal .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+.cal .wd { font-size: 11.5px; color: var(--ink-faint); padding: 2px 0; font-weight: 700; }
+.cal .d { border: 0; background: transparent; color: var(--ink); border-radius: 9px; padding: 6px 0; font-size: 13px; cursor: pointer; font-family: var(--font); }
+.cal .d:hover { background: var(--accent-soft); }
+.cal .d.in { background: var(--accent-soft); }
+.cal .d.today { box-shadow: inset 0 0 0 1.5px var(--accent); }
+.cal .d.sel { background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: #fff; font-weight: 800; box-shadow: none; }
+.cal .d.fri { color: var(--danger); } .cal .d.sel.fri { color: #fff; }
+.cal .ft { display: flex; justify-content: space-between; margin-top: 10px; }
+.cal .ft button { border: 0; background: none; color: var(--accent-strong); font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: var(--font); }
+.presets { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
+.presets button { border: 0; background: transparent; color: var(--ink-soft); padding: 4px 11px; border-radius: 999px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--font); }
+.presets button:hover { background: var(--accent-soft); color: var(--accent-strong); }
+tr.dup td { background: var(--danger-soft) !important; }
+tr.dup td:first-child { box-shadow: inset -3px 0 0 var(--danger); }
+.dup-note { color: var(--danger); font-size: 12.5px; font-weight: 700; margin: -4px 0 10px; }
+.summary-card.dup-card { cursor: pointer; background: linear-gradient(135deg, rgba(224,69,63,.78) 0%, rgba(255,120,100,.72) 100%); box-shadow: 0 16px 34px -16px rgba(224,69,63,.5), inset 0 1px 0 rgba(255,255,255,.45); }
+.summary-card.dup-card.sel { box-shadow: 0 0 0 3px var(--danger-soft), 0 0 0 5px rgba(224,69,63,.7); }
+.task-list { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.task-row { display: flex; align-items: center; gap: 4px; }
+.task-row .field-in { padding: 7px 10px; font-size: 13px; }
 .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 10000; padding: 10px 20px; border-radius: 999px; font-size: 13px; font-weight: 700;
   background: var(--pop-bg); color: var(--ink); border: 1px solid var(--line); box-shadow: var(--shadow-float); animation: rise .18s ease;
   -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
@@ -321,13 +356,13 @@ const SUPABASE_KEY = "sb_publishable_uup5CXqDLkXph4jdC1Qb_A_9PW3n9oG";
 // ==============================
 
 const TEAMS = ["بدنه", "الحاقیه", "غیر خودرویی"];
-const ROLES = {supervisor: "سوپروایزر", admin: "ادمین", user: "کاربر"};
+const ROLES = {supervisor: "سوپروایزر", admin: "تیم لید", user: "کاربر"};
 const TYPES = {text: "متن کوتاه", textarea: "متن بلند", number: "عدد", select: "انتخاب یک گزینه", checkbox: "انتخاب چند گزینه", jdate: "تاریخ شمسی", time: "ساعت", section: "عنوان بخش / توضیح"};
 const HAS_OPTS = t => ["select", "radio", "checkbox"].includes(t);
 const ERR = {INVALID_LOGIN: "داخلی یا رمز عبور اشتباه است", NOT_AUTHENTICATED: "نشست شما منقضی شده؛ دوباره وارد شوید", FORBIDDEN: "دسترسی ندارید",
   FORM_NOT_AVAILABLE: "این فرم در دسترس نیست", ALREADY_SUBMITTED: "این فرم را قبلاً ثبت کرده‌اید", WRONG_PASSWORD: "رمز فعلی اشتباه است",
   WEAK_PASSWORD: "رمز باید حداقل ۶ کاراکتر باشد", BAD_USERNAME: "نام کاربری فقط عدد، حروف انگلیسی و . _ - @ (حداقل ۳ کاراکتر)", USERNAME_TAKEN: "این نام کاربری قبلاً ثبت شده",
-  SUBMIT_NOT_ALLOWED: "ثبت تسک فقط برای کاربران است؛ نقش شما نظارتی است", CANNOT_DEMOTE_SELF: "نمی‌توانید نقش یا وضعیت خودتان را تغییر دهید", TITLE_REQUIRED: "عنوان فرم را وارد کنید", NOT_FOUND: "پیدا نشد"};
+  SUBMIT_NOT_ALLOWED: "ثبت تسک فقط برای کاربران است؛ نقش شما نظارتی است", CANNOT_DEMOTE_SELF: "نمی‌توانید نقش یا وضعیت خودتان را تغییر دهید", TITLE_REQUIRED: "عنوان فرم را وارد کنید", NOT_FOUND: "پیدا نشد", OPTIONS_REQUIRED: "حداقل یک تسک لازم است", NOT_TEAM_FIELD: "این سؤال تسک تیمی ندارد"};
 
 const IC = {
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
@@ -344,7 +379,7 @@ const IC = {
 };
 
 const S = {token: null, me: null, tab: null, forms: [], users: [], adminForms: [], reportForms: [], editing: null, fill: null, vals: {}, recent: [],
-  respForm: null, responses: [], respFilter: "", respTeam: "", respDays: "1", respOpt: null, userQ: "", userTeam: ""};
+  respForm: null, responses: [], respFilter: "", respTeam: "", dupOnly: false, teamUsers: [], respOpt: null, userQ: "", userTeam: ""};
 const isSup = () => S.me?.role === "supervisor";
 const homeTab = r => r === "user" ? "fill" : "resp";
 const $ = s => document.querySelector(s);
@@ -419,7 +454,8 @@ async function boot() {
 /* ---------- shell ---------- */
 function shell(inner, narrow) {
   const r = S.me.role;
-  const tabs = r === "supervisor" ? [["resp", "نظارت همه تیم‌ها"], ["aforms", "فرم‌ها و تسک‌ها"], ["users", "کاربران"]] : [];
+  const tabs = r === "supervisor" ? [["resp", "نظارت همه تیم‌ها"], ["tasks", "تسک‌ها"], ["aforms", "فرم‌ها"], ["users", "کاربران"]]
+             : r === "admin" ? [["resp", "نظارت تیم"], ["tasks", "تسک‌های تیم"], ["tusers", "کاربران تیم"]] : [];
   $("#app").innerHTML = `<header class="topbar">
     <div class="topbar-left">
       <div class="topbar-brand"><img src="/assets/azkiseller.png" alt="azkiseller" onerror="this.parentNode.remove()"></div>
@@ -443,6 +479,8 @@ async function go(tab) {
     if (tab === "fill" && S.me.role !== "user") { return go("resp"); }
     if (tab === "fill") { S.forms = await api("gf_my_forms", T()); if (S.forms.length === 1) await openFill(S.forms[0]); else renderMyForms(); }
     else if (tab === "aforms") { [S.adminForms, S.users] = await Promise.all([api("gf_admin_forms", T()), api("gf_admin_users", T())]); renderAdminForms(); }
+    else if (tab === "tasks") { S.reportForms = await api("gf_report_forms", T()); S.taskEdit = {}; renderTasks(); }
+    else if (tab === "tusers") { S.teamUsers = await api("gf_team_users", T()); renderTeamUsers(); }
     else if (tab === "users") { S.users = await api("gf_admin_users", T()); renderUsers(); }
     else if (tab === "resp") { S.reportForms = await api("gf_report_forms", T());
       if (!S.reportForms.some(f => f.id === S.respForm)) S.respForm = S.reportForms[0]?.id || null; await loadResponses(); }
@@ -657,35 +695,134 @@ async function saveForm() {
     toast("ذخیره شد ✓"); go("aforms"); } catch (e) { toast(e.message, 1); }
 }
 
-/* ---------- reports: admin = own team, supervisor = all ---------- */
+/* ---------- jalali (shamsi) calendar ---------- */
+function div(a, b) { return ~~(a / b); }
+function g2j(gy, gm, gd) {
+  const g_d_m = [0,31,59,90,120,151,181,212,243,273,304,334];
+  let jy = gy <= 1600 ? 0 : 979; gy -= gy <= 1600 ? 621 : 1600;
+  const gy2 = gm > 2 ? gy + 1 : gy;
+  let days = 365 * gy + div(gy2 + 3, 4) - div(gy2 + 99, 100) + div(gy2 + 399, 400) - 80 + gd + g_d_m[gm - 1];
+  jy += 33 * div(days, 12053); days %= 12053; jy += 4 * div(days, 1461); days %= 1461;
+  if (days > 365) { jy += div(days - 1, 365); days = (days - 1) % 365; }
+  const jm = days < 186 ? 1 + div(days, 31) : 7 + div(days - 186, 30);
+  const jd = 1 + (days < 186 ? days % 31 : (days - 186) % 30);
+  return [jy, jm, jd];
+}
+function j2g(jy, jm, jd) {
+  let gy = jy <= 979 ? 621 : 1600; jy -= jy <= 979 ? 0 : 979;
+  let days = 365 * jy + div(jy, 33) * 8 + div(jy % 33 + 3, 4) + 78 + jd + (jm < 7 ? (jm - 1) * 31 : (jm - 7) * 30 + 186);
+  gy += 400 * div(days, 146097); days %= 146097;
+  if (days > 36524) { gy += 100 * div(--days, 36524); days %= 36524; if (days >= 365) days++; }
+  gy += 4 * div(days, 1461); days %= 1461;
+  if (days > 365) { gy += div(days - 1, 365); days = (days - 1) % 365; }
+  let gd = days + 1; const leap = (gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0;
+  const ml = [0,31,leap ? 29 : 28,31,30,31,30,31,31,30,31,30,31]; let gm = 0;
+  for (gm = 1; gm <= 12 && gd > ml[gm]; gm++) gd -= ml[gm];
+  return [gy, gm, gd];
+}
+const jLen = (y, m) => m <= 6 ? 31 : m <= 11 ? 30 : (g2j(...j2g(y, 12, 30))[2] === 30 ? 30 : 29);
+const JM = ["فروردین","اردیبهشت","خرداد","تیر","مرداد","شهریور","مهر","آبان","آذر","دی","بهمن","اسفند"];
+const p2 = n => String(n).padStart(2, "0");
+const faD = s => String(s).replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[d]);
+const jStr = d => d[0] + "/" + p2(d[1]) + "/" + p2(d[2]);
+const jNum = d => d[0] * 10000 + d[1] * 100 + d[2];
+// Tehran is UTC+3:30 all year (no DST since 1401)
+const TEH = 3.5 * 3600e3;
+function tehranToday(offsetDays = 0) { const t = new Date(Date.now() + TEH + offsetDays * 864e5); return g2j(t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate()); }
+function jStartISO(j) { const g = j2g(...j); return new Date(Date.UTC(g[0], g[1] - 1, g[2]) - TEH).toISOString(); }
+function jNextISO(j) { const g = j2g(...j); return new Date(Date.UTC(g[0], g[1] - 1, g[2]) - TEH + 864e5).toISOString(); }
+function dayKey(iso) { const t = new Date(new Date(iso).getTime() + TEH); return t.getUTCFullYear() + "-" + (t.getUTCMonth() + 1) + "-" + t.getUTCDate(); }
+S.range = {from: tehranToday(), to: tehranToday()};
+S.cal = {open: null, view: null};
+
+function rangeLabel() { const a = jStr(S.range.from), b = jStr(S.range.to); return a === b ? faD(a) : faD(a) + " تا " + faD(b); }
+function calHTML(which) {
+  const sel = S.range[which], [y, m] = S.cal.view, n = jLen(y, m), T0 = tehranToday();
+  const g = j2g(y, m, 1), wd = (new Date(Date.UTC(g[0], g[1] - 1, g[2])).getUTCDay() + 1) % 7;
+  const lo = jNum(S.range.from), hi = jNum(S.range.to);
+  let h = `<div class="hd"><button class="nav" data-n="-1" title="ماه قبل">›</button><span>${JM[m - 1]} ${faD(y)}</span><button class="nav" data-n="1" title="ماه بعد">‹</button></div><div class="grid">`;
+  h += ["ش","ی","د","س","چ","پ","ج"].map(x => `<div class="wd">${x}</div>`).join("");
+  for (let i = 0; i < wd; i++) h += "<div></div>";
+  for (let d = 1; d <= n; d++) {
+    const c = ["d"], k = jNum([y, m, d]);
+    if (k === jNum(sel)) c.push("sel");
+    else if (k >= lo && k <= hi) c.push("in");
+    if (k === jNum(T0)) c.push("today");
+    if ((wd + d - 1) % 7 === 6) c.push("fri");
+    h += `<button class="${c.join(" ")}" data-d="${d}">${faD(d)}</button>`;
+  }
+  return h + `</div><div class="ft"><button data-q="today">امروز</button><button data-q="yest">دیروز</button></div>`;
+}
+function openCal(which) {
+  closeCal(); S.cal.open = which; S.cal.view = [S.range[which][0], S.range[which][1]];
+  const pop = $(`#cal-${which}`); pop.hidden = false; $(`#btn-${which}`).classList.add("open"); drawCal();
+}
+function closeCal() { document.querySelectorAll(".cal").forEach(p => p.hidden = true); document.querySelectorAll(".pickbtn").forEach(b => b.classList.remove("open")); S.cal.open = null; }
+function drawCal() {
+  const which = S.cal.open; if (!which) return; const pop = $(`#cal-${which}`); pop.innerHTML = calHTML(which);
+  pop.querySelectorAll(".nav").forEach(b => b.onclick = e => { e.stopPropagation(); let [yy, mm] = S.cal.view; mm += +b.dataset.n;
+    if (mm > 12) { mm = 1; yy++; } if (mm < 1) { mm = 12; yy--; } S.cal.view = [yy, mm]; drawCal(); });
+  pop.querySelectorAll(".d").forEach(b => b.onclick = e => { e.stopPropagation(); pickDate(which, [S.cal.view[0], S.cal.view[1], +b.dataset.d]); });
+  pop.querySelectorAll("[data-q]").forEach(b => b.onclick = e => { e.stopPropagation(); pickDate(which, tehranToday(b.dataset.q === "yest" ? -1 : 0)); });
+}
+function pickDate(which, d) {
+  S.range[which] = d;
+  if (jNum(S.range.from) > jNum(S.range.to)) { if (which === "from") S.range.to = d; else S.range.from = d; }
+  closeCal(); loadResponses();
+}
+function setPreset(p) {
+  const t = tehranToday();
+  if (p === "today") S.range = {from: t, to: t};
+  else if (p === "yest") { const y = tehranToday(-1); S.range = {from: y, to: y}; }
+  else if (p === "7") S.range = {from: tehranToday(-6), to: t};
+  else if (p === "month") S.range = {from: [t[0], t[1], 1], to: t};
+  loadResponses();
+}
+document.addEventListener("click", closeCal);
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeCal(); });
+const CAL_IC = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+
+/* ---------- reports: team lead = own team, supervisor = all ---------- */
 async function loadResponses() {
-  S.responses = S.respForm ? await api("gf_admin_responses", {...T(), p_form_id: S.respForm}) : []; renderResponses();
+  const btn = $("#rr"); if (btn) btn.disabled = true;
+  try {
+    S.responses = S.respForm ? await api("gf_admin_responses", {...T(), p_form_id: S.respForm, p_from: jStartISO(S.range.from), p_to: jNextISO(S.range.to)}) : [];
+  } catch (e) { toast(e.message, 1); S.responses = []; }
+  markDuplicates(S.responses); renderResponses();
+}
+// same order number, same person, same (Tehran) day => duplicate
+function markDuplicates(list) {
+  const cnt = {}, key = r => r.data && r.data.order_no ? `${r.user_id}|${String(r.data.order_no).trim()}|${dayKey(r.created_at)}` : null;
+  list.forEach(r => { const k = key(r); if (k) cnt[k] = (cnt[k] || 0) + 1; });
+  list.forEach(r => { const k = key(r); r._dup = !!(k && cnt[k] > 1); r._dupN = k ? cnt[k] : 0; });
 }
 const cellVal = v => v == null ? "" : Array.isArray(v) ? v.join("، ") : String(v);
-function baseRows() {
-  const days = +S.respDays, from = days ? startOfDay(days) : 0;
-  return S.responses.filter(r => (!S.respTeam || r.team === S.respTeam) && (!from || new Date(r.created_at).getTime() >= from));
-}
+const baseRows = () => S.responses.filter(r => !S.respTeam || r.team === S.respTeam);
 function renderResponses() {
-  const m = $("#main"), f = S.reportForms.find(x => x.id === S.respForm), sup = isSup();
+  const m = $("#main"); if (!m) return;
+  const f = S.reportForms.find(x => x.id === S.respForm), sup = isSup();
   if (!S.reportForms.length) { m.innerHTML = `<div class="panel empty">هنوز فرمی وجود ندارد.</div>`; return; }
   const cols = (f?.fields || []).filter(x => x.type !== "section");
   const optF = cols.find(x => HAS_OPTS(x.type) && x.type !== "checkbox");
   const team = sup ? S.respTeam : S.me.team;
   const base = baseRows(), q = S.respFilter.trim().toLowerCase();
-  const rows = base.filter(r => (!S.respOpt || !optF || r.data[optF.id] === S.respOpt) &&
+  const rows = base.filter(r => (!S.respOpt || !optF || r.data[optF.id] === S.respOpt) && (!S.dupOnly || r._dup) &&
     (!q || [r.full_name, r.username, r.team, ...cols.map(c => cellVal(r.data[c.id]))].join(" ").toLowerCase().includes(q)));
-  const today0 = startOfDay(1);
-  const people = new Set(base.map(r => r.user_id)).size, orders = optF ? new Set(base.map(r => r.data.order_no).filter(Boolean)).size : null;
+  const people = new Set(base.map(r => r.user_id)).size, orders = new Set(base.map(r => r.data.order_no).filter(Boolean)).size;
+  const dupN = base.filter(r => r._dup).length;
   const optCounts = {}; if (optF) base.forEach(r => { const v = r.data[optF.id]; if (v) optCounts[v] = (optCounts[v] || 0) + 1; });
   const optList = optF ? [...new Set([...optsFor(optF, team), ...Object.keys(optCounts)])] : [];
-  const byUser = {}; rows.forEach(r => { const k = r.user_id || "?"; (byUser[k] = byUser[k] || {n: r.full_name || r.username || "—", u: r.username, t: r.team, c: 0}).c++; });
+  const byUser = {}; rows.forEach(r => { const k = r.user_id || "?"; const p = (byUser[k] = byUser[k] || {n: r.full_name || r.username || "—", u: r.username, t: r.team, c: 0, d: 0}); p.c++; if (r._dup) p.d++; });
   const people2 = Object.values(byUser).sort((a, b) => b.c - a.c), maxC = people2[0]?.c || 1;
   const LIMIT = 800;
-  m.innerHTML = `<div class="page-title"><h1>${sup ? "نظارت همه تیم‌ها" : "نظارت تیم " + esc(S.me.team || "")}</h1><span class="sub">${f ? esc(f.title) : ""}</span></div>
+  m.innerHTML = `<div class="page-title"><h1>${sup ? "نظارت همه تیم‌ها" : "نظارت تیم " + esc(S.me.team || "")}</h1><span class="sub">${f ? esc(f.title) : ""} · ${rangeLabel()}</span></div>
     <section class="panel top"><div class="controls">
       ${S.reportForms.length > 1 ? `<span class="ctl">فرم <select id="rf">${S.reportForms.map(x => `<option value="${x.id}" ${x.id === S.respForm ? "selected" : ""}>${esc(x.title)}</option>`).join("")}</select></span>` : ""}
-      <span class="ctl">بازه <select id="rd">${[["1", "امروز"], ["7", "۷ روز اخیر"], ["30", "۳۰ روز اخیر"], ["0", "همه"]].map(([v, t]) => `<option value="${v}" ${S.respDays === v ? "selected" : ""}>${t}</option>`).join("")}</select></span>
+      <span class="ctl">از
+        <span class="pickbox"><button type="button" class="pickbtn" id="btn-from">${CAL_IC}<span>${faD(jStr(S.range.from))}</span></button><div class="pop cal" id="cal-from" hidden></div></span></span>
+      <span class="ctl">تا
+        <span class="pickbox"><button type="button" class="pickbtn" id="btn-to">${CAL_IC}<span>${faD(jStr(S.range.to))}</span></button><div class="pop cal" id="cal-to" hidden></div></span></span>
+      <span class="presets">${[["today", "امروز"], ["yest", "دیروز"], ["7", "۷ روز"], ["month", "این ماه"]].map(([k, t]) => `<button data-preset="${k}">${t}</button>`).join("")}</span>
       ${sup ? `<span class="ctl">تیم <select id="rt"><option value="">همه تیم‌ها</option>${TEAMS.map(t => `<option ${S.respTeam === t ? "selected" : ""}>${t}</option>`).join("")}</select></span>` : ""}
       <span class="spacer"></span>
       <button class="btn ghost sm" id="rr">${IC.refresh} بروزرسانی</button>
@@ -693,28 +830,34 @@ function renderResponses() {
     </div></section>
     <div class="summary-row">
       <div class="summary-card"><div class="label">کل ثبت‌ها</div><div class="value">${fa(base.length)}</div></div>
-      <div class="summary-card"><div class="label">ثبت امروز</div><div class="value">${fa(base.filter(r => new Date(r.created_at).getTime() >= today0).length)}</div></div>
       <div class="summary-card"><div class="label">تعداد نفرات</div><div class="value">${fa(people)}</div></div>
-      <div class="summary-card"><div class="label">${orders != null ? "سفارش یکتا" : "میانگین هر نفر"}</div><div class="value">${orders != null ? fa(orders) : fa(people ? Math.round(10 * base.length / people) / 10 : 0)}</div></div>
+      <div class="summary-card"><div class="label">سفارش یکتا</div><div class="value">${fa(orders)}</div></div>
+      <div class="summary-card dup-card${S.dupOnly ? " sel" : ""}" id="dupCard" title="سفارش تکراری توسط یک نفر در یک روز — کلیک برای فیلتر"><div class="label">ثبت تکراری</div><div class="value">${fa(dupN)}</div></div>
     </div>
     ${sup ? teamOverview(f, optF) : ""}
     ${optF && optList.length ? `<div class="chips">${optList.map(o => `<div class="chip${S.respOpt === o ? " sel" : ""}${optCounts[o] ? "" : " zero"}" data-o="${esc(o)}"><div class="n">${fa(optCounts[o] || 0)}</div><div class="t">${esc(o)}</div></div>`).join("")}</div>` : ""}
     <section class="panel"><div class="tbar"><h2><span class="step">۱</span>ثبت‌ها</h2>
       <input class="field-in search" id="rq" placeholder="جستجو (شماره سفارش، تسک، نام، داخلی …)" value="${esc(S.respFilter)}">
+      <label class="ctl" style="cursor:pointer"><input type="checkbox" id="dupOnly" ${S.dupOnly ? "checked" : ""}> فقط تکراری‌ها</label>
       <span class="count-badge"><b>${fa(rows.length)}</b> ثبت</span></div>
-      <div class="tablewrap"><table><thead><tr><th>زمان ثبت</th><th>ثبت‌کننده</th><th>داخلی</th>${sup ? "<th>تیم</th>" : ""}${cols.map(c => `<th>${esc(c.label)}</th>`).join("")}${sup ? "<th></th>" : ""}</tr></thead><tbody>
-      ${rows.length ? rows.slice(0, LIMIT).map(r => `<tr><td class="nowrap">${fmtDT(r.created_at)}</td><td class="nowrap">${esc(r.full_name || "—")}</td><td>${esc(r.username || "")}</td>${sup ? `<td class="nowrap">${esc(r.team || "—")}</td>` : ""}
-        ${cols.map(c => c.id === "order_no" ? `<td class="code"><b>${esc(cellVal(r.data[c.id]))}</b></td>` : `<td>${esc(cellVal(r.data[c.id]))}</td>`).join("")}${sup ? `<td><button class="icon-btn del" data-dr="${r.id}" title="حذف">${IC.del}</button></td>` : ""}</tr>`).join("")
-        : `<tr><td colspan="${cols.length + (sup ? 5 : 3)}" class="empty">داده‌ای برای نمایش نیست</td></tr>`}</tbody></table>
+      ${dupN ? `<div class="dup-note">ردیف‌های قرمز: یک نفر یک شماره سفارش را در یک روز بیش از یک بار ثبت کرده است.</div>` : ""}
+      <div class="tablewrap"><table><thead><tr><th>زمان ثبت</th><th>ثبت‌کننده</th><th>داخلی</th>${sup ? "<th>تیم</th>" : ""}${cols.map(c => `<th>${esc(c.label)}</th>`).join("")}<th></th></tr></thead><tbody>
+      ${rows.length ? rows.slice(0, LIMIT).map(r => `<tr class="${r._dup ? "dup" : ""}"><td class="nowrap">${fmtDT(r.created_at)}</td><td class="nowrap">${esc(r.full_name || "—")}</td><td>${esc(r.username || "")}</td>${sup ? `<td class="nowrap">${esc(r.team || "—")}</td>` : ""}
+        ${cols.map(c => c.id === "order_no" ? `<td class="code"><b>${esc(cellVal(r.data[c.id]))}</b>${r._dup ? ` <span class="tag bad">${fa(r._dupN)}×</span>` : ""}</td>` : `<td>${esc(cellVal(r.data[c.id]))}</td>`).join("")}
+        <td>${sup ? `<button class="icon-btn del" data-dr="${r.id}" title="حذف">${IC.del}</button>` : ""}</td></tr>`).join("")
+        : `<tr><td colspan="${cols.length + (sup ? 5 : 4)}" class="empty">در این بازه داده‌ای نیست</td></tr>`}</tbody></table>
       ${rows.length > LIMIT ? `<div class="more">نمایش ${fa(LIMIT)} از ${fa(rows.length)} — فایل Excel همه را دارد</div>` : ""}</div></section>
     ${people2.length ? `<section class="panel"><div class="tbar"><h2><span class="step">۲</span>به تفکیک نفرات</h2></div>
-      <div class="tablewrap" style="max-height:420px"><table><thead><tr><th>ثبت‌کننده</th><th>داخلی</th>${sup ? "<th>تیم</th>" : ""}<th>تعداد ثبت</th></tr></thead><tbody>
-      ${people2.map(p => `<tr><td>${esc(p.n)}</td><td>${esc(p.u || "")}</td>${sup ? `<td>${esc(p.t || "—")}</td>` : ""}<td><div class="bar-cell"><b style="min-width:34px">${fa(p.c)}</b><span style="width:${Math.max(4, 160 * p.c / maxC)}px"></span></div></td></tr>`).join("")}
+      <div class="tablewrap" style="max-height:420px"><table><thead><tr><th>ثبت‌کننده</th><th>داخلی</th>${sup ? "<th>تیم</th>" : ""}<th>تعداد ثبت</th><th>تکراری</th></tr></thead><tbody>
+      ${people2.map(p => `<tr class="${p.d ? "dup" : ""}"><td>${esc(p.n)}</td><td>${esc(p.u || "")}</td>${sup ? `<td>${esc(p.t || "—")}</td>` : ""}<td><div class="bar-cell"><b style="min-width:34px">${fa(p.c)}</b><span style="width:${Math.max(4, 160 * p.c / maxC)}px"></span></div></td><td>${p.d ? `<span class="tag bad">${fa(p.d)}</span>` : "—"}</td></tr>`).join("")}
       </tbody></table></div></section>` : ""}`;
   if ($("#rf")) $("#rf").onchange = async e => { S.respForm = e.target.value; S.respFilter = ""; S.respOpt = null; await loadResponses(); };
   $("#rq").oninput = e => { S.respFilter = e.target.value; const p = e.target.selectionStart; renderResponses(); const n = $("#rq"); n.focus(); n.setSelectionRange(p, p); };
-  $("#rd").onchange = e => { S.respDays = e.target.value; renderResponses(); };
+  ["from", "to"].forEach(w => { $(`#btn-${w}`).onclick = e => { e.stopPropagation(); S.cal.open === w ? closeCal() : openCal(w); }; $(`#cal-${w}`).onclick = e => e.stopPropagation(); });
+  m.querySelectorAll("[data-preset]").forEach(b => b.onclick = () => setPreset(b.dataset.preset));
   if ($("#rt")) $("#rt").onchange = e => { S.respTeam = e.target.value; S.respOpt = null; renderResponses(); };
+  $("#dupOnly").onchange = e => { S.dupOnly = e.target.checked; renderResponses(); };
+  $("#dupCard").onclick = () => { S.dupOnly = !S.dupOnly; renderResponses(); };
   m.querySelectorAll("[data-team-card]").forEach(c => c.onclick = () => { S.respTeam = S.respTeam === c.dataset.teamCard ? "" : c.dataset.teamCard; S.respOpt = null; renderResponses(); });
   m.querySelectorAll("[data-o]").forEach(c => c.onclick = () => { S.respOpt = S.respOpt === c.dataset.o ? null : c.dataset.o; renderResponses(); });
   $("#rr").onclick = loadResponses;
@@ -723,37 +866,34 @@ function renderResponses() {
     try { await api("gf_admin_delete_response", {...T(), p_id: b.dataset.dr}); await loadResponses(); toast("حذف شد"); } catch (e) { toast(e.message, 1); } }));
 }
 function teamOverview(f, optF) {
-  const days = +S.respDays, from = days ? startOfDay(days) : 0;
-  const inRange = S.responses.filter(r => !from || new Date(r.created_at).getTime() >= from);
   return `<section class="panel"><div class="tbar"><h2><span class="step">${IC.app}</span>به تفکیک تیم</h2><span class="spacer"></span><span style="color:var(--ink-faint);font-size:12px">برای فیلتر روی هر تیم کلیک کنید</span></div>
     <div class="team-grid">${TEAMS.map(t => {
-      const rs = inRange.filter(r => r.team === t), people = new Set(rs.map(r => r.user_id)).size;
+      const rs = S.responses.filter(r => r.team === t), people = new Set(rs.map(r => r.user_id)).size, dups = rs.filter(r => r._dup).length;
       const cnt = {}; if (optF) rs.forEach(r => { const v = r.data[optF.id]; if (v) cnt[v] = (cnt[v] || 0) + 1; });
       const opts = optF ? [...new Set([...optsFor(optF, t), ...Object.keys(cnt)])] : [];
       const max = Math.max(1, ...Object.values(cnt));
       return `<div class="team-card${S.respTeam === t ? " sel" : ""}" data-team-card="${t}">
         <div class="th"><b>${t}</b><span class="spacer"></span><span class="tn">${fa(rs.length)}</span></div>
-        <div class="ts">${fa(people)} نفر ثبت داشته‌اند</div>
+        <div class="ts">${fa(people)} نفر ثبت داشته‌اند${dups ? ` · <span style="color:var(--danger);font-weight:800">${fa(dups)} تکراری</span>` : ""}</div>
         ${opts.map(o => `<div class="trow"><span class="tl">${esc(o)}</span><span class="tbar2"><i style="width:${100 * (cnt[o] || 0) / max}%"></i></span><b>${fa(cnt[o] || 0)}</b></div>`).join("")}
       </div>`; }).join("")}</div></section>`;
 }
 function loadScript(src) { return new Promise((ok, no) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
 function download(blob, name) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
 async function exportExcel(f, cols, rows, optF, optList) {
-  const head = ["زمان ثبت", "ثبت‌کننده", "داخلی", "تیم", ...cols.map(c => c.label)];
-  const data = rows.map(r => [fmtDT(r.created_at), r.full_name || "", r.username || "", r.team || "", ...cols.map(c => cellVal(r.data[c.id]))]);
-  // summary: one row per person, one column per option
+  const head = ["زمان ثبت", "ثبت‌کننده", "داخلی", "تیم", ...cols.map(c => c.label), "تکراری"];
+  const data = rows.map(r => [fmtDT(r.created_at), r.full_name || "", r.username || "", r.team || "", ...cols.map(c => cellVal(r.data[c.id])), r._dup ? `بله (${r._dupN} بار)` : ""]);
   let sum = null;
   if (optF) {
     const per = {};
-    rows.forEach(r => { const k = r.user_id || r.username; const p = per[k] = per[k] || {n: r.full_name || "", u: r.username || "", t: r.team || "", c: {}, s: 0};
-      const v = r.data[optF.id]; if (v) p.c[v] = (p.c[v] || 0) + 1; p.s++; });
+    rows.forEach(r => { const k = r.user_id || r.username; const p = per[k] = per[k] || {n: r.full_name || "", u: r.username || "", t: r.team || "", c: {}, s: 0, d: 0};
+      const v = r.data[optF.id]; if (v) p.c[v] = (p.c[v] || 0) + 1; p.s++; if (r._dup) p.d++; });
     const opts = optList.filter(o => Object.values(per).some(p => p.c[o]));
-    sum = [["ثبت‌کننده", "داخلی", "تیم", ...opts, "جمع"], ...Object.values(per).sort((a, b) => b.s - a.s).map(p => [p.n, p.u, p.t, ...opts.map(o => p.c[o] || 0), p.s])];
+    sum = [["ثبت‌کننده", "داخلی", "تیم", ...opts, "جمع", "تکراری"], ...Object.values(per).sort((a, b) => b.s - a.s).map(p => [p.n, p.u, p.t, ...opts.map(o => p.c[o] || 0), p.s, p.d])];
   }
-  const days = {"1": "امروز", "7": "۷ روز", "30": "۳۰ روز", "0": "همه"}[S.respDays] || "";
   const teamName = isSup() ? (S.respTeam || "همه تیم‌ها") : (S.me.team || "");
-  const name = `${f.title} - ${teamName} - ${days} ${todayJ().replace(/\//g, "-")}`;
+  const a = jStr(S.range.from).replace(/\//g, "-"), b = jStr(S.range.to).replace(/\//g, "-");
+  const name = `${f.title} - ${teamName} - ${a === b ? a : a + " تا " + b}`;
   const btn = $("#rx"); if (btn) btn.disabled = true;
   try {
     if (!window.XLSX) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js");
@@ -768,6 +908,72 @@ async function exportExcel(f, cols, rows, optF, optList) {
     download(new Blob(["﻿" + [head, ...data].map(r => r.map(q).join(",")).join("\r\n")], {type: "text/csv;charset=utf-8"}), `${name}.csv`);
     toast("کتابخانه Excel بارگذاری نشد؛ فایل CSV دانلود شد", 1);
   } finally { if (btn) btn.disabled = false; }
+}
+
+/* ---------- team tasks: team lead = own team, supervisor = all teams ---------- */
+function taskFields() {
+  const out = [];
+  S.reportForms.forEach(f => f.fields.forEach(x => { if (x.team_options && typeof x.team_options === "object") out.push({f, x}); }));
+  return out;
+}
+function renderTasks() {
+  const m = $("#main"), teams = isSup() ? TEAMS : [S.me.team], tf = taskFields();
+  S.taskEdit = S.taskEdit || {};
+  if (!tf.length) { m.innerHTML = `<div class="panel empty">فرمی با تسک‌های تیمی وجود ندارد.</div>`; return; }
+  m.innerHTML = `<div class="page-title"><h1>${isSup() ? "تسک‌های تیم‌ها" : "تسک‌های تیم " + esc(S.me.team || "")}</h1><span class="sub">گزینه‌هایی که کاربران تیم در فرم می‌بینند</span></div>` +
+    tf.map(({f, x}) => `<section class="panel"><h2><span class="step">${IC.app}</span>${esc(f.title)} — ${esc(x.label)}</h2>
+      <div class="help">تغییر نام یک تسک روی ثبت‌های قبلی اثر ندارد؛ آن‌ها با نام قبلی در گزارش‌ها باقی می‌مانند.</div>
+      <div class="team-grid" style="${teams.length === 1 ? "grid-template-columns:1fr;max-width:620px" : ""}">${teams.map(t => {
+        const k = `${f.id}|${x.id}|${t}`; if (!S.taskEdit[k]) S.taskEdit[k] = [...(x.team_options[t] || [])];
+        const list = S.taskEdit[k], dirty = JSON.stringify(list) !== JSON.stringify(x.team_options[t] || []);
+        return `<div class="team-card" style="cursor:default" data-k="${esc(k)}">
+          <div class="th"><b>${t}</b><span class="spacer"></span><span class="tn" style="font-size:18px">${fa(list.length)}</span></div>
+          <div class="task-list">${list.map((o, i) => `<div class="task-row"><input class="field-in" data-i="${i}" value="${esc(o)}">
+            <button class="icon-btn" data-mv="-1" data-i="${i}" title="بالا">${IC.up}</button><button class="icon-btn" data-mv="1" data-i="${i}" title="پایین">${IC.down}</button>
+            <button class="icon-btn del" data-rm="${i}" title="حذف">${IC.del}</button></div>`).join("")}</div>
+          <div class="task-row" style="margin-top:8px"><input class="field-in" data-new placeholder="تسک جدید … (Enter)"><button class="btn ghost sm" data-add>+ افزودن</button></div>
+          <div class="controls" style="margin-top:12px"><button class="btn primary sm" data-save ${dirty ? "" : "disabled"}>ذخیره تسک‌های ${t}</button>
+            ${dirty ? `<button class="btn ghost sm" data-reset>انصراف</button><span class="msg" style="margin:0;color:var(--warn)">تغییرات ذخیره نشده</span>` : ""}</div>
+        </div>`; }).join("")}</div></section>`).join("");
+  m.querySelectorAll("[data-k]").forEach(card => {
+    const k = card.dataset.k, [fid, xid, t] = k.split("|"), list = S.taskEdit[k];
+    const sync = () => card.querySelectorAll("input[data-i]").forEach(inp => list[+inp.dataset.i] = inp.value);
+    card.querySelectorAll("input[data-i]").forEach(inp => inp.oninput = () => { list[+inp.dataset.i] = inp.value; const s = card.querySelector("[data-save]"); s.disabled = false; });
+    card.querySelectorAll("[data-mv]").forEach(b => b.onclick = () => { sync(); const i = +b.dataset.i, j = i + +b.dataset.mv; if (j < 0 || j >= list.length) return; [list[i], list[j]] = [list[j], list[i]]; renderTasks(); });
+    card.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { sync(); list.splice(+b.dataset.rm, 1); renderTasks(); });
+    const add = () => { sync(); const v = card.querySelector("[data-new]").value.trim(); if (!v) return; if (list.includes(v)) return toast("این تسک وجود دارد", 1); list.push(v); renderTasks(); };
+    card.querySelector("[data-add]").onclick = add;
+    card.querySelector("[data-new]").onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); add(); } };
+    if (card.querySelector("[data-reset]")) card.querySelector("[data-reset]").onclick = () => { delete S.taskEdit[k]; renderTasks(); };
+    card.querySelector("[data-save]").onclick = async () => {
+      sync(); const clean = [...new Set(list.map(s => s.trim()).filter(Boolean))];
+      if (!clean.length) return toast("حداقل یک تسک لازم است", 1);
+      try { await api("gf_team_set_options", {...T(), p_form_id: fid, p_field_id: xid, p_team: t, p_options: clean});
+        S.reportForms = await api("gf_report_forms", T()); delete S.taskEdit[k]; renderTasks(); toast(`تسک‌های ${t} ذخیره شد ✓`);
+      } catch (e) { toast(e.message, 1); }
+    };
+  });
+}
+
+/* ---------- team lead: own team's people (read-only) ---------- */
+function renderTeamUsers() {
+  const m = $("#main"), q = S.userQ.toLowerCase();
+  const list = S.teamUsers.filter(u => !q || (u.full_name + " " + u.username).toLowerCase().includes(q));
+  m.innerHTML = `<div class="page-title"><h1>کاربران تیم ${esc(S.me.team || "")}</h1></div>
+    <div class="summary-row">
+      <div class="summary-card"><div class="label">کل افراد</div><div class="value">${fa(S.teamUsers.length)}</div></div>
+      <div class="summary-card"><div class="label">کاربر</div><div class="value">${fa(S.teamUsers.filter(u => u.role === "user").length)}</div></div>
+      <div class="summary-card"><div class="label">تیم لید</div><div class="value">${fa(S.teamUsers.filter(u => u.role === "admin").length)}</div></div>
+      <div class="summary-card"><div class="label">بدون ثبت</div><div class="value">${fa(S.teamUsers.filter(u => u.role === "user" && !+u.responses).length)}</div></div>
+    </div>
+    <section class="panel"><div class="tbar"><h2><span class="step">۱</span>افراد</h2>
+      <input class="field-in search" id="uq" placeholder="جستجوی نام یا داخلی …" value="${esc(S.userQ)}"><span class="count-badge"><b>${fa(list.length)}</b> نفر</span></div>
+    <div class="tablewrap"><table><thead><tr><th>نام</th><th>داخلی</th><th>نقش</th><th>وضعیت</th><th>کل ثبت‌ها</th><th>آخرین ثبت</th></tr></thead><tbody>
+    ${list.map(u => `<tr><td><b>${esc(u.full_name)}</b></td><td class="code" style="text-align:right">${esc(u.username)}</td>
+      <td><span class="tag ${u.role === "user" ? "err" : "doc"}">${ROLES[u.role] || u.role}</span></td>
+      <td>${u.active ? `<span class="tag ok">فعال</span>` : `<span class="tag bad">غیرفعال</span>`}</td>
+      <td>${fa(u.responses)}</td><td class="nowrap">${u.last ? fmtDT(u.last) : "—"}</td></tr>`).join("") || `<tr><td colspan="6" class="empty">کسی پیدا نشد</td></tr>`}</tbody></table></div></section>`;
+  $("#uq").oninput = e => { S.userQ = e.target.value; const p = e.target.selectionStart; renderTeamUsers(); const n = $("#uq"); n.focus(); n.setSelectionRange(p, p); };
 }
 
 /* ---------- supervisor: users ---------- */
