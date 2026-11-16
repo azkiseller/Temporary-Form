@@ -846,7 +846,7 @@ function renderResponses() {
       <div class="tablewrap"><table><thead><tr><th>زمان ثبت</th><th>ثبت‌کننده</th><th>داخلی</th>${sup ? "<th>تیم</th>" : ""}${cols.map(c => `<th>${esc(c.label)}</th>`).join("")}<th></th></tr></thead><tbody>
       ${rows.length ? rows.slice(0, LIMIT).map(r => `<tr class="${r._dup ? "dup" : ""}"><td class="nowrap">${fmtDT(r.created_at)}</td><td class="nowrap">${esc(r.full_name || "—")}</td><td>${esc(r.username || "")}</td>${sup ? `<td class="nowrap">${esc(r.team || "—")}</td>` : ""}
         ${cols.map(c => c.id === "order_no" ? `<td class="code"><b>${esc(cellVal(r.data[c.id]))}</b>${r._dup ? ` <span class="tag bad">${fa(r._dupN)}×</span>` : ""}</td>` : `<td>${esc(cellVal(r.data[c.id]))}</td>`).join("")}
-        <td>${sup ? `<button class="icon-btn del" data-dr="${r.id}" title="حذف">${IC.del}</button>` : ""}</td></tr>`).join("")
+        <td><button class="icon-btn del" data-dr="${r.id}" title="حذف این ثبت">${IC.del}</button></td></tr>`).join("")
         : `<tr><td colspan="${cols.length + (sup ? 5 : 4)}" class="empty">در این بازه داده‌ای نیست</td></tr>`}</tbody></table>
       ${rows.length > LIMIT ? `<div class="more">نمایش ${fa(LIMIT)} از ${fa(rows.length)} — فایل Excel همه را دارد</div>` : ""}</div></section>
     ${people2.length ? `<section class="panel"><div class="tbar"><h2><span class="step">۲</span>به تفکیک نفرات</h2></div>
@@ -864,7 +864,7 @@ function renderResponses() {
   m.querySelectorAll("[data-o]").forEach(c => c.onclick = () => { S.respOpt = S.respOpt === c.dataset.o ? null : c.dataset.o; renderResponses(); });
   $("#rr").onclick = loadResponses;
   $("#rx").onclick = () => exportExcel(f, cols, rows, optF, optList);
-  m.querySelectorAll("[data-dr]").forEach(b => b.onclick = () => confirmBox("این ثبت حذف شود؟", async () => {
+  m.querySelectorAll("[data-dr]").forEach(b => b.onclick = () => confirmBox(`ثبت سفارش ${(S.responses.find(x => x.id === b.dataset.dr)?.data?.order_no) || ""} حذف شود؟`, async () => {
     try { await api("gf_admin_delete_response", {...T(), p_id: b.dataset.dr}); await loadResponses(); toast("حذف شد"); } catch (e) { toast(e.message, 1); } }));
 }
 function teamOverview(f, optF) {
