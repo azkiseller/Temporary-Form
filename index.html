@@ -817,9 +817,13 @@ async function loadResponses() {
 }
 const reportKey = () => [S.respForm, jStr(S.range.from), jStr(S.range.to)].join("|");
 const renderReport = () => S.tab === "pivot" ? renderPivot() : renderResponses();
-// same order number, same person, same (Tehran) day => duplicate
+// same person + same order number + same task + same (Tehran) day => duplicate
+// (the same order on different tasks is normal work, not a duplicate)
 function markDuplicates(list) {
-  const cnt = {}, key = r => r.data && r.data.order_no ? `${r.user_id}|${String(r.data.order_no).trim()}|${dayKey(r.created_at)}` : null;
+  const f = S.reportForms.find(x => x.id === S.respForm);
+  const taskIds = (f?.fields || []).filter(x => HAS_OPTS(x.type)).map(x => x.id);
+  const taskOf = r => taskIds.map(id => cellVal(r.data[id]).trim()).join("|");
+  const cnt = {}, key = r => r.data && r.data.order_no ? `${r.user_id}|${String(r.data.order_no).trim()}|${taskOf(r)}|${dayKey(r.created_at)}` : null;
   list.forEach(r => { const k = key(r); if (k) cnt[k] = (cnt[k] || 0) + 1; });
   list.forEach(r => { const k = key(r); r._dup = !!(k && cnt[k] > 1); r._dupN = k ? cnt[k] : 0; });
 }
@@ -859,7 +863,7 @@ function renderResponses() {
       <div class="summary-card"><div class="label">کل ثبت‌ها</div><div class="value">${fa(base.length)}</div></div>
       <div class="summary-card"><div class="label">تعداد نفرات</div><div class="value">${fa(people)}</div></div>
       <div class="summary-card"><div class="label">سفارش یکتا</div><div class="value">${fa(orders)}</div></div>
-      <div class="summary-card dup-card${S.dupOnly ? " sel" : ""}" id="dupCard" title="سفارش تکراری توسط یک نفر در یک روز — کلیک برای فیلتر"><div class="label">ثبت تکراری</div><div class="value">${fa(dupN)}</div></div>
+      <div class="summary-card dup-card${S.dupOnly ? " sel" : ""}" id="dupCard" title="یک سفارش روی یک تسک توسط یک نفر در یک روز — کلیک برای فیلتر"><div class="label">ثبت تکراری</div><div class="value">${fa(dupN)}</div></div>
     </div>
     ${sup ? teamOverview(f, optF) : ""}
     ${optF && optList.length ? `<div class="chips">${optList.map(o => `<div class="chip${S.respOpt === o ? " sel" : ""}${optCounts[o] ? "" : " zero"}" data-o="${esc(o)}"><div class="n">${fa(optCounts[o] || 0)}</div><div class="t">${esc(o)}</div></div>`).join("")}</div>` : ""}
@@ -867,7 +871,7 @@ function renderResponses() {
       <input class="field-in search" id="rq" placeholder="جستجو (شماره سفارش، تسک، نام، داخلی …)" value="${esc(S.respFilter)}">
       <label class="ctl" style="cursor:pointer"><input type="checkbox" id="dupOnly" ${S.dupOnly ? "checked" : ""}> فقط تکراری‌ها</label>
       <span class="count-badge"><b>${fa(rows.length)}</b> ثبت</span></div>
-      ${dupN ? `<div class="dup-note">ردیف‌های قرمز: یک نفر یک شماره سفارش را در یک روز بیش از یک بار ثبت کرده است.</div>` : ""}
+      ${dupN ? `<div class="dup-note">ردیف‌های قرمز: یک نفر یک شماره سفارش را روی یک تسک در یک روز بیش از یک بار ثبت کرده است.</div>` : ""}
       <div class="tablewrap"><table><thead><tr><th>زمان ثبت</th><th>ثبت‌کننده</th><th>داخلی</th>${sup ? "<th>تیم</th>" : ""}${cols.map(c => `<th>${esc(c.label)}</th>`).join("")}<th></th></tr></thead><tbody>
       ${rows.length ? rows.slice(0, LIMIT).map(r => `<tr class="${r._dup ? "dup" : ""}"><td class="nowrap">${fmtDT(r.created_at)}</td><td class="nowrap">${esc(r.full_name || "—")}</td><td>${esc(r.username || "")}</td>${sup ? `<td class="nowrap">${esc(r.team || "—")}</td>` : ""}
         ${cols.map(c => c.id === "order_no" ? `<td class="code"><b>${esc(cellVal(r.data[c.id]))}</b>${r._dup ? ` <span class="tag bad">${fa(r._dupN)}×</span>` : ""}</td>` : `<td>${esc(cellVal(r.data[c.id]))}</td>`).join("")}
