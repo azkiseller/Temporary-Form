@@ -348,6 +348,8 @@ table.pivot tfoot td.tot-col { background: linear-gradient(135deg, var(--accent)
 table.pivot .name-c { font-weight: 700; }
 .pivot-wrap { max-height: 70vh; }
 .app-footer { text-align: center; margin: 16px 0 0; padding-bottom: 64px; font-size: 0.65rem; color: var(--ink-faint); opacity: 0.6; direction: ltr; letter-spacing: .3px; }
+.shift-seg button.on { background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: #fff; }
+.shift-seg button small { opacity: .75; font-weight: 600; }
 .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 10000; padding: 10px 20px; border-radius: 999px; font-size: 13px; font-weight: 700;
   background: var(--pop-bg); color: var(--ink); border: 1px solid var(--line); box-shadow: var(--shadow-float); animation: rise .18s ease;
   -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
@@ -378,7 +380,7 @@ const HAS_OPTS = t => ["select", "radio", "checkbox"].includes(t);
 const ERR = {INVALID_LOGIN: "داخلی یا رمز عبور اشتباه است", NOT_AUTHENTICATED: "نشست شما منقضی شده؛ دوباره وارد شوید", FORBIDDEN: "دسترسی ندارید",
   FORM_NOT_AVAILABLE: "این فرم در دسترس نیست", ALREADY_SUBMITTED: "این فرم را قبلاً ثبت کرده‌اید", WRONG_PASSWORD: "رمز فعلی اشتباه است",
   WEAK_PASSWORD: "رمز باید حداقل ۶ کاراکتر باشد", BAD_USERNAME: "نام کاربری فقط عدد، حروف انگلیسی و . _ - @ (حداقل ۳ کاراکتر)", USERNAME_TAKEN: "این نام کاربری قبلاً ثبت شده",
-  SUBMIT_NOT_ALLOWED: "ثبت تسک فقط برای کاربران است؛ نقش شما نظارتی است", CANNOT_DEMOTE_SELF: "نمی‌توانید نقش یا وضعیت خودتان را تغییر دهید", TITLE_REQUIRED: "عنوان فرم را وارد کنید", NOT_FOUND: "پیدا نشد", OPTIONS_REQUIRED: "حداقل یک تسک لازم است", NOT_TEAM_FIELD: "این سؤال تسک تیمی ندارد"};
+  SUBMIT_NOT_ALLOWED: "ثبت تسک فقط برای کاربران است؛ نقش شما نظارتی است", CANNOT_DEMOTE_SELF: "نمی‌توانید نقش یا وضعیت خودتان را تغییر دهید", TITLE_REQUIRED: "عنوان فرم را وارد کنید", NOT_FOUND: "پیدا نشد", OPTIONS_REQUIRED: "حداقل یک تسک لازم است", NOT_TEAM_FIELD: "این سؤال تسک تیمی ندارد", BAD_SHIFT: "شیفت نامعتبر است"};
 
 const IC = {
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
@@ -838,8 +840,19 @@ function dupLimit(team, task) {
   if (team === "الحاقیه" || /الحاقیه\s*بدنه/.test(task || "")) return 2;
   return 1;
 }
+const SHIFTS = ["صبح", "شب"];
+const hasShift = () => (S.responses || []).some(r => r.shift) || (S.teamUsers || []).some(u => u.shift);
+const shiftTag = sh => sh ? `<span class="tag ${sh === "صبح" ? "warn" : "doc"}">${sh === "صبح" ? "☀ " : "☾ "}${sh}</span>` : "—";
+function shiftControlHTML(teamRows) {
+  if (!hasShift()) return "";
+  const n = sh => teamRows.filter(r => !sh || r.shift === sh).length;
+  return `<span class="ctl">شیفت <span class="presets shift-seg">${[["", "همه"], ...SHIFTS.map(x => [x, x])].map(([v, t]) =>
+    `<button data-shift="${v}" class="${S.respShift === v ? "on" : ""}">${t} <small>${fa(n(v))}</small></button>`).join("")}</span></span>`;
+}
+function bindShift(rerender) { document.querySelectorAll("[data-shift]").forEach(b => b.onclick = () => { S.respShift = b.dataset.shift; S.respOpt = null; rerender(); }); }
 const cellVal = v => v == null ? "" : Array.isArray(v) ? v.join("، ") : String(v);
-const baseRows = () => S.responses.filter(r => !S.respTeam || r.team === S.respTeam);
+const teamRows = () => S.responses.filter(r => (isSup() ? !S.respTeam || r.team === S.respTeam : true));
+const baseRows = () => teamRows().filter(r => !S.respShift || r.shift === S.respShift);
 function renderResponses() {
   const m = $("#main"); if (!m) return;
   const f = S.reportForms.find(x => x.id === S.respForm), sup = isSup();
@@ -854,7 +867,8 @@ function renderResponses() {
   const dupN = base.filter(r => r._dup).length;
   const optCounts = {}; if (optF) base.forEach(r => { const v = r.data[optF.id]; if (v) optCounts[v] = (optCounts[v] || 0) + 1; });
   const optList = optF ? [...new Set([...optsFor(optF, team), ...Object.keys(optCounts)])] : [];
-  const byUser = {}; rows.forEach(r => { const k = r.user_id || "?"; const p = (byUser[k] = byUser[k] || {n: r.full_name || r.username || "—", u: r.username, t: r.team, c: 0, d: 0}); p.c++; if (r._dup) p.d++; });
+  const shOn = hasShift();
+  const byUser = {}; rows.forEach(r => { const k = r.user_id || "?"; const p = (byUser[k] = byUser[k] || {n: r.full_name || r.username || "—", u: r.username, t: r.team, sh: r.shift, c: 0, d: 0}); p.c++; if (r._dup) p.d++; });
   const people2 = Object.values(byUser).sort((a, b) => b.c - a.c), maxC = people2[0]?.c || 1;
   const LIMIT = 800;
   m.innerHTML = `<div class="page-title"><h1>${sup ? "نظارت همه تیم‌ها" : "نظارت تیم " + esc(S.me.team || "")}</h1><span class="sub">${f ? esc(f.title) : ""} · ${rangeLabel()}</span></div>
@@ -866,6 +880,7 @@ function renderResponses() {
         <span class="pickbox"><button type="button" class="pickbtn" id="btn-to">${CAL_IC}<span>${faD(jStr(S.range.to))}</span></button><div class="pop cal" id="cal-to" hidden></div></span></span>
       <span class="presets">${[["today", "امروز"], ["yest", "دیروز"], ["7", "۷ روز"], ["month", "این ماه"]].map(([k, t]) => `<button data-preset="${k}">${t}</button>`).join("")}</span>
       ${sup ? `<span class="ctl">تیم <select id="rt"><option value="">همه تیم‌ها</option>${TEAMS.map(t => `<option ${S.respTeam === t ? "selected" : ""}>${t}</option>`).join("")}</select></span>` : ""}
+      ${shiftControlHTML(teamRows())}
       <span class="spacer"></span>
       <button class="btn ghost sm" id="rr">${IC.refresh} بروزرسانی</button>
       <button class="btn ghost sm" id="goPivot">${IC.dl} خروجی Excel در «مدیریت تسک»</button>
@@ -882,17 +897,18 @@ function renderResponses() {
       <input class="field-in search" id="rq" placeholder="جستجو (شماره سفارش، تسک، نام، داخلی …)" value="${esc(S.respFilter)}">
       <label class="ctl" style="cursor:pointer"><input type="checkbox" id="dupOnly" ${S.dupOnly ? "checked" : ""}> فقط تکراری‌ها</label>
       <span class="count-badge"><b>${fa(rows.length)}</b> ثبت</span></div>
-      <div class="tablewrap"><table><thead><tr><th>زمان ثبت</th><th>ثبت‌کننده</th><th>داخلی</th>${sup ? "<th>تیم</th>" : ""}${cols.map(c => `<th>${esc(c.label)}</th>`).join("")}<th></th></tr></thead><tbody>
-      ${rows.length ? rows.slice(0, LIMIT).map(r => `<tr class="${r._dup ? "dup" : ""}"><td class="nowrap">${fmtDT(r.created_at)}</td><td class="nowrap">${esc(r.full_name || "—")}</td><td>${esc(r.username || "")}</td>${sup ? `<td class="nowrap">${esc(r.team || "—")}</td>` : ""}
+      <div class="tablewrap"><table><thead><tr><th>زمان ثبت</th><th>ثبت‌کننده</th><th>داخلی</th>${shOn ? "<th>شیفت</th>" : ""}${sup ? "<th>تیم</th>" : ""}${cols.map(c => `<th>${esc(c.label)}</th>`).join("")}<th></th></tr></thead><tbody>
+      ${rows.length ? rows.slice(0, LIMIT).map(r => `<tr class="${r._dup ? "dup" : ""}"><td class="nowrap">${fmtDT(r.created_at)}</td><td class="nowrap">${esc(r.full_name || "—")}</td><td>${esc(r.username || "")}</td>${shOn ? `<td class="nowrap">${shiftTag(r.shift)}</td>` : ""}${sup ? `<td class="nowrap">${esc(r.team || "—")}</td>` : ""}
         ${cols.map(c => c.id === "order_no" ? `<td class="code"><b>${esc(cellVal(r.data[c.id]))}</b>${r._dup ? ` <span class="tag bad">${fa(r._dupN)}×</span>` : ""}</td>` : `<td>${esc(cellVal(r.data[c.id]))}</td>`).join("")}
         <td><button class="icon-btn del" data-dr="${r.id}" title="حذف این ثبت">${IC.del}</button></td></tr>`).join("")
-        : `<tr><td colspan="${cols.length + (sup ? 5 : 4)}" class="empty">در این بازه داده‌ای نیست</td></tr>`}</tbody></table>
+        : `<tr><td colspan="${cols.length + (sup ? 5 : 4) + (shOn ? 1 : 0)}" class="empty">در این بازه داده‌ای نیست</td></tr>`}</tbody></table>
       ${rows.length > LIMIT ? `<div class="more">نمایش ${fa(LIMIT)} از ${fa(rows.length)} — فایل Excel همه را دارد</div>` : ""}</div></section>
     ${people2.length ? `<section class="panel"><div class="tbar"><h2><span class="step">۲</span>به تفکیک نفرات</h2></div>
-      <div class="tablewrap" style="max-height:420px"><table><thead><tr><th>ثبت‌کننده</th><th>داخلی</th>${sup ? "<th>تیم</th>" : ""}<th>تعداد ثبت</th><th>تکراری</th></tr></thead><tbody>
-      ${people2.map(p => `<tr class="${p.d ? "dup" : ""}"><td>${esc(p.n)}</td><td>${esc(p.u || "")}</td>${sup ? `<td>${esc(p.t || "—")}</td>` : ""}<td><div class="bar-cell"><b style="min-width:34px">${fa(p.c)}</b><span style="width:${Math.max(4, 160 * p.c / maxC)}px"></span></div></td><td>${p.d ? `<span class="tag bad">${fa(p.d)}</span>` : "—"}</td></tr>`).join("")}
+      <div class="tablewrap" style="max-height:420px"><table><thead><tr><th>ثبت‌کننده</th><th>داخلی</th>${shOn ? "<th>شیفت</th>" : ""}${sup ? "<th>تیم</th>" : ""}<th>تعداد ثبت</th><th>تکراری</th></tr></thead><tbody>
+      ${people2.map(p => `<tr class="${p.d ? "dup" : ""}"><td>${esc(p.n)}</td><td>${esc(p.u || "")}</td>${shOn ? `<td>${shiftTag(p.sh)}</td>` : ""}${sup ? `<td>${esc(p.t || "—")}</td>` : ""}<td><div class="bar-cell"><b style="min-width:34px">${fa(p.c)}</b><span style="width:${Math.max(4, 160 * p.c / maxC)}px"></span></div></td><td>${p.d ? `<span class="tag bad">${fa(p.d)}</span>` : "—"}</td></tr>`).join("")}
       </tbody></table></div></section>` : ""}`;
   if ($("#rf")) $("#rf").onchange = async e => { S.respForm = e.target.value; S.respFilter = ""; S.respOpt = null; await loadResponses(); };
+  bindShift(renderResponses);
   $("#rq").oninput = e => { S.respFilter = e.target.value; const p = e.target.selectionStart; renderResponses(); const n = $("#rq"); n.focus(); n.setSelectionRange(p, p); };
   ["from", "to"].forEach(w => { $(`#btn-${w}`).onclick = e => { e.stopPropagation(); S.cal.open === w ? closeCal() : openCal(w); }; $(`#cal-${w}`).onclick = e => e.stopPropagation(); });
   m.querySelectorAll("[data-preset]").forEach(b => b.onclick = () => setPreset(b.dataset.preset));
@@ -929,7 +945,8 @@ function rangeControlsHTML(sup) {
     <span class="ctl">تا
       <span class="pickbox"><button type="button" class="pickbtn" id="btn-to">${CAL_IC}<span>${faD(jStr(S.range.to))}</span></button><div class="pop cal" id="cal-to" hidden></div></span></span>
     <span class="presets">${[["today", "امروز"], ["yest", "دیروز"], ["7", "۷ روز"], ["month", "این ماه"]].map(([k, t]) => `<button data-preset="${k}">${t}</button>`).join("")}</span>
-    ${sup ? `<span class="ctl">تیم <select id="rt"><option value="">همه تیم‌ها</option>${TEAMS.map(t => `<option ${S.respTeam === t ? "selected" : ""}>${t}</option>`).join("")}</select></span>` : ""}`;
+    ${sup ? `<span class="ctl">تیم <select id="rt"><option value="">همه تیم‌ها</option>${TEAMS.map(t => `<option ${S.respTeam === t ? "selected" : ""}>${t}</option>`).join("")}</select></span>` : ""}
+      ${shiftControlHTML(teamRows())}`;
 }
 function bindRangeControls(rerender) {
   ["from", "to"].forEach(w => { $(`#btn-${w}`).onclick = e => { e.stopPropagation(); S.cal.open === w ? closeCal() : openCal(w); }; $(`#cal-${w}`).onclick = e => e.stopPropagation(); });
@@ -940,11 +957,11 @@ function pivotData() {
   const f = S.reportForms.find(x => x.id === S.respForm), sup = isSup();
   const optF = (f?.fields || []).find(x => HAS_OPTS(x.type) && x.type !== "checkbox");
   const team = sup ? S.respTeam : S.me.team;
-  const rows = S.responses.filter(r => !team || r.team === team);
+  const rows = S.responses.filter(r => (!team || r.team === team) && (!S.respShift || r.shift === S.respShift));
   const per = {}, colTot = {};
   rows.forEach(r => {
     const k = r.user_id || r.username;
-    const p = per[k] = per[k] || {id: r.user_id, u: r.username || "", n: r.full_name || "—", t: r.team || "", c: {}, s: 0, d: 0};
+    const p = per[k] = per[k] || {id: r.user_id, u: r.username || "", n: r.full_name || "—", t: r.team || "", sh: r.shift || "", c: {}, s: 0, d: 0};
     const v = optF ? (r.data[optF.id] || "—") : "ثبت"; p.c[v] = (p.c[v] || 0) + 1; p.s++; if (r._dup) p.d++;
     colTot[v] = (colTot[v] || 0) + 1;
   });
@@ -953,7 +970,7 @@ function pivotData() {
   const cols = [...base.filter(o => colTot[o]), ...Object.keys(colTot).filter(o => !base.includes(o))];
   let list = Object.values(per);
   const sk = S.pivotSort || {k: "__total", dir: -1};
-  const val = p => sk.k === "__total" ? p.s : sk.k === "__name" ? p.n : sk.k === "__code" ? p.u : (p.c[sk.k] || 0);
+  const val = p => sk.k === "__total" ? p.s : sk.k === "__name" ? p.n : sk.k === "__code" ? p.u : sk.k === "__shift" ? p.sh : (p.c[sk.k] || 0);
   list.sort((a, b) => { const x = val(a), y = val(b); return (typeof x === "string" ? x.localeCompare(y, "fa") : x - y) * sk.dir; });
   return {f, optF, team, rows, cols, list, colTot, total: rows.length, sk};
 }
@@ -961,10 +978,11 @@ function renderPivot() {
   const m = $("#main"); if (!m) return;
   const sup = isSup();
   if (!S.reportForms.length) { m.innerHTML = `<div class="panel empty">هنوز فرمی وجود ندارد.</div>`; return; }
+  const shOn = hasShift(), lead = 2 + (sup && !S.respTeam ? 1 : 0) + (shOn ? 1 : 0);
   const P = pivotData(), maxCell = Math.max(1, ...P.list.flatMap(p => P.cols.map(c => p.c[c] || 0)));
   const arrow = k => P.sk.k === k ? (P.sk.dir < 0 ? " ▼" : " ▲") : "";
   const people = P.list.length, avg = people ? Math.round(10 * P.total / people) / 10 : 0;
-  m.innerHTML = `<div class="page-title"><h1>مدیریت تسک${P.team ? " — تیم " + esc(P.team) : sup ? " — همه تیم‌ها" : ""}</h1><span class="sub">${P.f ? esc(P.f.title) : ""} · ${rangeLabel()}</span></div>
+  m.innerHTML = `<div class="page-title"><h1>مدیریت تسک${P.team ? " — تیم " + esc(P.team) : sup ? " — همه تیم‌ها" : ""}${S.respShift ? " — شیفت " + S.respShift : ""}</h1><span class="sub">${P.f ? esc(P.f.title) : ""} · ${rangeLabel()}</span></div>
     <section class="panel top"><h2><span class="step">${CAL_IC}</span>بازه‌ی زمانی و خروجی Excel</h2>
       <div class="controls">${rangeControlsHTML(sup)}<span class="spacer"></span>
       <button class="btn ghost sm" id="rr">${IC.refresh} بروزرسانی</button>
@@ -980,16 +998,16 @@ function renderPivot() {
       <span style="color:var(--ink-faint);font-size:12px">روی عنوان ستون برای مرتب‌سازی و روی هر عدد برای دیدن ثبت‌ها کلیک کنید</span></div>
     ${!P.list.length ? `<div class="empty">در این بازه تسکی ثبت نشده است</div>` : `
     <div class="tablewrap pivot-wrap"><table class="pivot"><thead>
-      <tr class="grp-row"><th colspan="${sup && !P.team ? 3 : 2}" class="corner">تعداد</th><th colspan="${P.cols.length}" class="grp">عنوان تسک</th><th class="tot-col"></th></tr>
-      <tr><th data-sort="__code" class="sortable">کد داخلی${arrow("__code")}</th><th data-sort="__name" class="sortable">نام کارشناس${arrow("__name")}</th>${sup && !P.team ? "<th>تیم</th>" : ""}
+      <tr class="grp-row"><th colspan="${lead}" class="corner">تعداد</th><th colspan="${P.cols.length}" class="grp">عنوان تسک</th><th class="tot-col"></th></tr>
+      <tr><th data-sort="__code" class="sortable">کد داخلی${arrow("__code")}</th><th data-sort="__name" class="sortable">نام کارشناس${arrow("__name")}</th>${shOn ? `<th data-sort="__shift" class="sortable">شیفت${arrow("__shift")}</th>` : ""}${sup && !P.team ? "<th>تیم</th>" : ""}
         ${P.cols.map(c => `<th data-sort="${esc(c)}" class="sortable task-h">${esc(c)}${arrow(c)}</th>`).join("")}
         <th data-sort="__total" class="sortable tot-col">جمع کل${arrow("__total")}</th></tr></thead><tbody>
-      ${P.list.map(p => `<tr${p.d ? ' class="has-dup"' : ""}><td class="code" style="text-align:right">${esc(p.u)}</td><td class="nowrap name-c">${esc(p.n)}${p.d ? ` <span class="tag bad" title="ثبت تکراری">${fa(p.d)} تکراری</span>` : ""}</td>${sup && !P.team ? `<td class="nowrap">${esc(p.t)}</td>` : ""}
+      ${P.list.map(p => `<tr${p.d ? ' class="has-dup"' : ""}><td class="code" style="text-align:right">${esc(p.u)}</td><td class="nowrap name-c">${esc(p.n)}${p.d ? ` <span class="tag bad" title="ثبت تکراری">${fa(p.d)} تکراری</span>` : ""}</td>${shOn ? `<td class="nowrap">${shiftTag(p.sh)}</td>` : ""}${sup && !P.team ? `<td class="nowrap">${esc(p.t)}</td>` : ""}
         ${P.cols.map(c => { const v = p.c[c] || 0; return `<td class="num${v ? " hit" : ""}" ${v ? `data-u="${esc(p.u)}" data-t="${esc(c)}" style="--h:${(0.08 + 0.42 * v / maxCell).toFixed(2)}"` : ""}>${v ? fa(v) : ""}</td>`; }).join("")}
         <td class="num tot-col"><b>${fa(p.s)}</b></td></tr>`).join("")}
-      </tbody><tfoot><tr><td colspan="${sup && !P.team ? 3 : 2}"><b>جمع کل</b></td>${P.cols.map(c => `<td class="num"><b>${fa(P.colTot[c])}</b></td>`).join("")}<td class="num tot-col"><b>${fa(P.total)}</b></td></tr></tfoot>
+      </tbody><tfoot><tr><td colspan="${lead}"><b>جمع کل</b></td>${P.cols.map(c => `<td class="num"><b>${fa(P.colTot[c])}</b></td>`).join("")}<td class="num tot-col"><b>${fa(P.total)}</b></td></tr></tfoot>
     </table></div>`}</section>`;
-  bindRangeControls(renderPivot);
+  bindRangeControls(renderPivot); bindShift(renderPivot);
   $("#rr").onclick = loadResponses;
   $("#px").onclick = () => exportPivot(P);
   m.querySelectorAll("[data-sort]").forEach(th => th.onclick = () => {
@@ -1002,14 +1020,15 @@ function renderPivot() {
 }
 async function exportPivot(P) {
   const sup = isSup(), withTeam = sup && !P.team;
-  const head = ["کد داخلی", "نام کارشناس", ...(withTeam ? ["تیم"] : []), ...P.cols, "جمع کل", "تکراری"];
-  const body = P.list.map(p => [p.u, p.n, ...(withTeam ? [p.t] : []), ...P.cols.map(c => p.c[c] || ""), p.s, p.d || ""]);
-  const foot = ["جمع کل", "", ...(withTeam ? [""] : []), ...P.cols.map(c => P.colTot[c]), P.total, ""];
+  const shOn = hasShift();
+  const head = ["کد داخلی", "نام کارشناس", ...(shOn ? ["شیفت"] : []), ...(withTeam ? ["تیم"] : []), ...P.cols, "جمع کل", "تکراری"];
+  const body = P.list.map(p => [p.u, p.n, ...(shOn ? [p.sh] : []), ...(withTeam ? [p.t] : []), ...P.cols.map(c => p.c[c] || ""), p.s, p.d || ""]);
+  const foot = ["جمع کل", "", ...(shOn ? [""] : []), ...(withTeam ? [""] : []), ...P.cols.map(c => P.colTot[c]), P.total, ""];
   const a = jStr(S.range.from).replace(/\//g, "-"), b = jStr(S.range.to).replace(/\//g, "-");
-  const name = `مدیریت تسک - ${P.team || "همه تیم‌ها"} - ${a === b ? a : a + " تا " + b}`;
+  const name = `مدیریت تسک - ${P.team || "همه تیم‌ها"}${S.respShift ? " - شیفت " + S.respShift : ""} - ${a === b ? a : a + " تا " + b}`;
   const fcols = (P.f?.fields || []).filter(x => x.type !== "section");
-  const rawHead = ["زمان ثبت", "ثبت‌کننده", "داخلی", "تیم", ...fcols.map(c => c.label), "تکراری"];
-  const raw = P.rows.map(r => [fmtDT(r.created_at), r.full_name || "", r.username || "", r.team || "", ...fcols.map(c => cellVal(r.data[c.id])), r._dup ? `بله (${r._dupN} بار)` : ""]);
+  const rawHead = ["زمان ثبت", "ثبت‌کننده", "داخلی", "شیفت", "تیم", ...fcols.map(c => c.label), "تکراری"];
+  const raw = P.rows.map(r => [fmtDT(r.created_at), r.full_name || "", r.username || "", r.shift || "", r.team || "", ...fcols.map(c => cellVal(r.data[c.id])), r._dup ? `بله (${r._dupN} بار)` : ""]);
   const btn = $("#px"); if (btn) btn.disabled = true;
   try {
     if (!window.XLSX) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js");
@@ -1078,17 +1097,18 @@ function renderTeamUsers() {
   m.innerHTML = `<div class="page-title"><h1>کاربران تیم ${esc(S.me.team || "")}</h1></div>
     <div class="summary-row">
       <div class="summary-card"><div class="label">کل افراد</div><div class="value">${fa(S.teamUsers.length)}</div></div>
-      <div class="summary-card"><div class="label">کاربر</div><div class="value">${fa(S.teamUsers.filter(u => u.role === "user").length)}</div></div>
-      <div class="summary-card"><div class="label">تیم لید</div><div class="value">${fa(S.teamUsers.filter(u => u.role === "admin").length)}</div></div>
+      ${S.teamUsers.some(u => u.shift) ? SHIFTS.map(x => `<div class="summary-card"><div class="label">شیفت ${x}</div><div class="value">${fa(S.teamUsers.filter(u => u.shift === x).length)}</div></div>`).join("")
+        : `<div class="summary-card"><div class="label">کاربر</div><div class="value">${fa(S.teamUsers.filter(u => u.role === "user").length)}</div></div>
+      <div class="summary-card"><div class="label">تیم لید</div><div class="value">${fa(S.teamUsers.filter(u => u.role === "admin").length)}</div></div>`}
       <div class="summary-card"><div class="label">بدون ثبت</div><div class="value">${fa(S.teamUsers.filter(u => u.role === "user" && !+u.responses).length)}</div></div>
     </div>
     <section class="panel"><div class="tbar"><h2><span class="step">۱</span>افراد</h2>
       <input class="field-in search" id="uq" placeholder="جستجوی نام یا داخلی …" value="${esc(S.userQ)}"><span class="count-badge"><b>${fa(list.length)}</b> نفر</span></div>
-    <div class="tablewrap"><table><thead><tr><th>نام</th><th>داخلی</th><th>نقش</th><th>وضعیت</th><th>کل ثبت‌ها</th><th>آخرین ثبت</th></tr></thead><tbody>
-    ${list.map(u => `<tr><td><b>${esc(u.full_name)}</b></td><td class="code" style="text-align:right">${esc(u.username)}</td>
+    <div class="tablewrap"><table><thead><tr><th>نام</th><th>داخلی</th><th>شیفت</th><th>نقش</th><th>وضعیت</th><th>کل ثبت‌ها</th><th>آخرین ثبت</th></tr></thead><tbody>
+    ${list.map(u => `<tr><td><b>${esc(u.full_name)}</b></td><td class="code" style="text-align:right">${esc(u.username)}</td><td>${shiftTag(u.shift)}</td>
       <td><span class="tag ${u.role === "user" ? "err" : "doc"}">${ROLES[u.role] || u.role}</span></td>
       <td>${u.active ? `<span class="tag ok">فعال</span>` : `<span class="tag bad">غیرفعال</span>`}</td>
-      <td>${fa(u.responses)}</td><td class="nowrap">${u.last ? fmtDT(u.last) : "—"}</td></tr>`).join("") || `<tr><td colspan="6" class="empty">کسی پیدا نشد</td></tr>`}</tbody></table></div></section>`;
+      <td>${fa(u.responses)}</td><td class="nowrap">${u.last ? fmtDT(u.last) : "—"}</td></tr>`).join("") || `<tr><td colspan="7" class="empty">کسی پیدا نشد</td></tr>`}</tbody></table></div></section>`;
   $("#uq").oninput = e => { S.userQ = e.target.value; const p = e.target.selectionStart; renderTeamUsers(); const n = $("#uq"); n.focus(); n.setSelectionRange(p, p); };
 }
 
@@ -1108,11 +1128,11 @@ function renderUsers() {
       <input class="field-in search" id="uq" placeholder="جستجوی نام یا داخلی …" value="${esc(S.userQ)}">
       <select id="ut"><option value="">همه تیم‌ها</option>${TEAMS.map(t => `<option ${tf === t ? "selected" : ""}>${t}</option>`).join("")}</select>
       <span class="count-badge"><b>${fa(list.length)}</b> نفر</span></div>
-    <div class="tablewrap"><table><thead><tr><th>نام</th><th>داخلی</th><th>تیم</th><th>نقش</th><th>وضعیت</th><th>تعداد ثبت</th><th></th></tr></thead><tbody>
-    ${list.map(u => `<tr><td><b>${esc(u.full_name)}</b></td><td class="code" style="text-align:right">${esc(u.username)}</td><td>${esc(u.team || "—")}</td>
+    <div class="tablewrap"><table><thead><tr><th>نام</th><th>داخلی</th><th>تیم</th><th>شیفت</th><th>نقش</th><th>وضعیت</th><th>تعداد ثبت</th><th></th></tr></thead><tbody>
+    ${list.map(u => `<tr><td><b>${esc(u.full_name)}</b></td><td class="code" style="text-align:right">${esc(u.username)}</td><td>${esc(u.team || "—")}</td><td>${shiftTag(u.shift)}</td>
       <td><span class="tag ${u.role === "user" ? "err" : u.role === "admin" ? "doc" : "warn"}">${ROLES[u.role] || u.role}</span></td>
       <td>${u.active ? `<span class="tag ok">فعال</span>` : `<span class="tag bad">غیرفعال</span>`}</td>
-      <td>${fa(u.responses)}</td><td><button class="icon-btn" data-eu="${u.id}" title="ویرایش">${IC.edit}</button></td></tr>`).join("") || `<tr><td colspan="7" class="empty">کسی پیدا نشد</td></tr>`}</tbody></table></div></section>`;
+      <td>${fa(u.responses)}</td><td><button class="icon-btn" data-eu="${u.id}" title="ویرایش">${IC.edit}</button></td></tr>`).join("") || `<tr><td colspan="8" class="empty">کسی پیدا نشد</td></tr>`}</tbody></table></div></section>`;
   $("#nu").onclick = () => userDialog(null);
   $("#uq").oninput = e => { S.userQ = e.target.value; const p = e.target.selectionStart; renderUsers(); const n = $("#uq"); n.focus(); n.setSelectionRange(p, p); };
   $("#ut").onchange = e => { S.userTeam = e.target.value; renderUsers(); };
@@ -1126,6 +1146,7 @@ function userDialog(u) {
     <label class="l">${isNew ? "رمز عبور (ایمیل)" : "رمز جدید — خالی = بدون تغییر"}</label><input class="field-in ltr" id="up" placeholder="name@gmail.com">
     <div class="grid2"><div><label class="l">تیم</label><select id="utm"><option value="">—</option>${TEAMS.map(t => `<option ${u.team === t ? "selected" : ""}>${t}</option>`).join("")}</select></div>
     <div><label class="l">نقش</label><select id="ur">${Object.entries(ROLES).map(([k, v]) => `<option value="${k}" ${u.role === k ? "selected" : ""}>${v}</option>`).join("")}</select></div></div>
+    <label class="l">شیفت</label><select id="ush" style="width:100%;padding:10px 12px"><option value="">— بدون شیفت —</option>${SHIFTS.map(x => `<option ${u.shift === x ? "selected" : ""}>${x}</option>`).join("")}</select>
     <div class="radio-line" style="margin-top:12px"><label><input type="checkbox" id="ua" ${u.active ? "checked" : ""}> فعال</label></div>
     <div class="msg err" id="um"></div>
     <div class="controls"><button class="btn primary" data-yes>ذخیره</button><button class="btn ghost" data-no>انصراف</button></div>`,
@@ -1134,7 +1155,7 @@ function userDialog(u) {
     d.querySelector("[data-yes]").onclick = async () => {
       const pw = $("#up").value.trim(), uname = faNum($("#uu").value).trim().toLowerCase();
       if ($("#ur").value !== "supervisor" && !$("#utm").value) { $("#um").textContent = "تیم را انتخاب کنید"; return; }
-      try { await api("gf_admin_save_user", {...T(), p_id: u.id || null, p_username: uname, p_full_name: $("#uf").value.trim(), p_password: pw, p_role: $("#ur").value, p_active: $("#ua").checked, p_team: $("#utm").value});
+      try { await api("gf_admin_save_user", {...T(), p_id: u.id || null, p_username: uname, p_full_name: $("#uf").value.trim(), p_password: pw, p_role: $("#ur").value, p_active: $("#ua").checked, p_team: $("#utm").value, p_shift: $("#ush").value});
         close(); toast("ذخیره شد ✓"); go("users");
       } catch (e) { $("#um").textContent = e.message; } };
   });
