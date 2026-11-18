@@ -350,6 +350,7 @@ table.pivot .name-c { font-weight: 700; }
 .app-footer { text-align: center; margin: 16px 0 0; padding-bottom: 64px; font-size: 0.65rem; color: var(--ink-faint); opacity: 0.6; direction: ltr; letter-spacing: .3px; }
 .shift-seg button.on { background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: #fff; }
 .shift-seg button small { opacity: .75; font-weight: 600; }
+.pill .tag { padding: 1px 9px; font-size: 11px; }
 .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 10000; padding: 10px 20px; border-radius: 999px; font-size: 13px; font-weight: 700;
   background: var(--pop-bg); color: var(--ink); border: 1px solid var(--line); box-shadow: var(--shadow-float); animation: rise .18s ease;
   -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
@@ -481,11 +482,11 @@ function shell(inner, narrow) {
   $("#app").innerHTML = `<header class="topbar">
     <div class="topbar-left">
       <div class="app-icon">${IC.app}</div>
-      <div><div class="app-title">${r === "user" ? "ثبت تسک‌ها" : "نظارت بر تسک‌ها"}</div><div class="app-sub">${S.me.team ? "تیم " + esc(S.me.team) : "همه تیم‌ها"} · ${ROLES[r]}</div></div>
+      <div><div class="app-title">${r === "user" ? "ثبت تسک‌ها" : "نظارت بر تسک‌ها"}</div><div class="app-sub">${S.me.team ? "تیم " + esc(S.me.team) : "همه تیم‌ها"}${S.me.shift ? " · شیفت " + S.me.shift : ""} · ${ROLES[r]}</div></div>
     </div>
     <div class="topbar-right">
       ${tabs.length > 1 ? `<div class="seg">${tabs.map(([k, v]) => `<button class="${S.tab === k ? "on" : ""}" data-tab="${k}">${v}</button>`).join("")}</div>` : ""}
-      <span class="pill static"><span class="dot"></span>${esc(S.me.full_name || S.me.username)}</span>
+      <span class="pill static"><span class="dot"></span>${esc(S.me.full_name || S.me.username)}${S.me.shift ? " " + shiftTag(S.me.shift) : ""}</span>
       <button class="pill" id="cpw" title="تغییر رمز">${IC.key}</button>
       <button class="pill" id="lo">${IC.out} خروج</button>
     </div></header>
@@ -576,7 +577,7 @@ function renderFill(okMsg = "") {
       <div class="summary-card"><div class="label">ثبت امروز من</div><div class="value">${fa(f.my_today || 0)}</div></div>
       <div class="summary-card"><div class="label">کل ثبت‌های من</div><div class="value">${fa(f.my_count || 0)}</div></div>
       <div class="summary-card"><div class="label">آخرین ثبت</div><div class="value sm">${f.my_last ? fmtDT(f.my_last) : "—"}</div></div>
-      <div class="summary-card"><div class="label">تیم</div><div class="value sm">${esc(S.me.team || "همه تیم‌ها")}</div></div>
+      <div class="summary-card"><div class="label">${S.me.shift ? "تیم و شیفت" : "تیم"}</div><div class="value sm">${esc(S.me.team || "همه تیم‌ها")}${S.me.shift ? ` · ${S.me.shift === "صبح" ? "☀" : "☾"} شیفت ${S.me.shift}` : ""}</div></div>
     </div>
     ${done ? `<div class="panel empty">این فرم را قبلاً ثبت کرده‌اید و فقط یک بار قابل ثبت است.</div>` : `
     <form id="ff" autocomplete="off">
